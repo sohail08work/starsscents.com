@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StarScents — Dubai's House of Fragrance</title>
+<meta name="description" content="Rare Middle Eastern fragrance houses and the world's finest designer names — sourced in Dubai, delivered duty-paid to the UK, Australia & Malaysia.">
+<!--
+  ═══════════════════════════════════════════════════════════════════
+  STARSCENTS — WHITE EDITION (Shopify-ready prototype v3)
+   · Theme:   Gallery white — paper #FFF, ink #131211, bronze #9A7B4F
+   · Type:    Cormorant (display) + Archivo (body/UI)
+   · Motion:  GSAP ScrollTrigger snap-to-chapter (function-based snapTo,
+              desktop + fine pointer only), product ticker loop,
+              3D flip cards (hover → back shot), timed product rotation
+   · Signature: fixed chapter rail (right edge) — numbers the snap
+              chapters, fills with scroll, click = snap to chapter.
+              Every animation is tied to either orientation (rail),
+              product discovery (ticker, flips) or reading order
+              (reveals). Nothing decorative-only.
+   · Every <section> maps to a Shopify section: data-shopify-section
+  ═══════════════════════════════════════════════════════════════════
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Archivo:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══ TOKENS ═══ */
+:root{
+  --paper:#FFFFFF;
+  --mist:#F6F4F1;            /* soft panel */
+  --ink:#131211;             /* near-black text */
+  --stone:#75706A;           /* secondary text */
+  --faint:#A9A49D;           /* tertiary / labels */
+  --bronze:#9A7B4F;          /* single accent */
+  --bronze-deep:#7C6039;
+  --line:rgba(19,18,17,.10);
+  --line-strong:rgba(19,18,17,.22);
+
+  --font-display:'Cormorant',Didot,Georgia,serif;
+  --font-body:'Archivo',Futura,'Century Gothic',sans-serif;
+
+  --sp-1:.5rem;--sp-2:1rem;--sp-3:1.5rem;--sp-4:2rem;
+  --sp-5:3rem;--sp-6:4.5rem;--sp-7:6.5rem;
+  --container:1320px;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --radius:2px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);font-weight:300;
+  font-size:1rem;line-height:1.65;letter-spacing:.01em;
+  color:var(--stone);background:var(--paper);
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;background:none;border:0;color:inherit}
+::selection{background:var(--ink);color:var(--paper)}
+:focus-visible{outline:1.5px solid var(--bronze);outline-offset:4px}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+/* ═══ UTILITIES ═══ */
+.container{max-width:var(--container);margin-inline:auto;padding-inline:clamp(1.25rem,4vw,3.5rem)}
+.skip-link{position:absolute;left:-9999px;top:0;background:var(--ink);color:var(--paper);padding:.8rem 1.4rem;z-index:400;font-weight:500}
+.skip-link:focus{left:0}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:.9rem;
+  font-size:.6563rem;font-weight:500;letter-spacing:.44em;text-transform:uppercase;
+  color:var(--bronze);
+}
+.eyebrow::before{content:"";width:2.6rem;height:1px;background:var(--bronze)}
+.eyebrow.centered::after{content:"";width:2.6rem;height:1px;background:var(--bronze)}
+h1,h2,h3{font-family:var(--font-display);font-weight:500;color:var(--ink);line-height:1.04;letter-spacing:.005em}
+.display-xl{font-size:clamp(3.2rem,9vw,7.5rem)}
+.display-lg{font-size:clamp(2.4rem,5vw,4.4rem)}
+.serif-i{font-style:italic;font-weight:400;color:var(--bronze)}
+.chapter{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding-block:var(--sp-7)}
+.section-sub{max-width:44ch;margin-top:var(--sp-3);font-size:1.0313rem;color:var(--stone)}
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--sp-4);margin-bottom:var(--sp-5);flex-wrap:wrap}
+
+.link-line{
+  display:inline-flex;align-items:center;gap:.8rem;
+  font-size:.7188rem;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--ink);
+}
+.link-line .dash{width:2.4rem;height:1px;background:var(--ink);transition:width .35s var(--ease);display:inline-block}
+.link-line:hover .dash{width:3.6rem;background:var(--bronze)}
+.link-line:hover{color:var(--bronze)}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:1.05rem 2.6rem;border:1px solid var(--ink);
+  font-size:.7188rem;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--ink);
+  transition:background .35s var(--ease),color .35s var(--ease),border-color .35s var(--ease);
+}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn-solid{background:var(--ink);color:var(--paper)}
+.btn-solid:hover{background:var(--bronze-deep);border-color:var(--bronze-deep)}
+
+/* reveal targets */
+[data-reveal]{opacity:0}
+.line-mask{display:block;overflow:hidden;padding-bottom:.1em;margin-bottom:-.1em}
+.line-mask>span{display:block;transform:translateY(112%)}
+.motion-off [data-reveal],.no-js [data-reveal]{opacity:1}
+.motion-off .line-mask>span,.no-js .line-mask>span{transform:none}
+
+/* ═══ HEADER ═══ */
+.site-header{
+  position:fixed;inset:0 0 auto 0;z-index:200;
+  transition:background .4s var(--ease),border-color .4s var(--ease),box-shadow .4s var(--ease);
+  border-bottom:1px solid transparent;
+}
+.site-header.scrolled{background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-color:var(--line)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);padding-block:1.15rem}
+.logo{font-family:var(--font-body);font-weight:600;letter-spacing:.34em;font-size:.9375rem;color:var(--ink)}
+.logo span{font-weight:300;color:var(--bronze)}
+.primary-nav ul{display:flex;gap:2.4rem;list-style:none}
+.primary-nav a{
+  font-size:.6875rem;font-weight:500;letter-spacing:.28em;text-transform:uppercase;color:var(--ink);
+  padding-block:.4rem;position:relative;
+}
+.primary-nav a::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:1px;background:var(--bronze);transform:scaleX(0);transform-origin:right;transition:transform .35s var(--ease)}
+.primary-nav a:hover::after{transform:scaleX(1);transform-origin:left}
+.header-tools{display:flex;align-items:center;gap:1.3rem}
+.header-tools svg{width:1.15rem;height:1.15rem}
+.header-tools button,.header-tools a{color:var(--ink);display:inline-flex}
+.nav-toggle{display:none}
+@media (max-width:920px){
+  .primary-nav{
+    position:fixed;inset:0;background:var(--paper);display:grid;place-items:center;
+    opacity:0;pointer-events:none;transition:opacity .35s var(--ease);
+  }
+  .primary-nav.open{opacity:1;pointer-events:auto}
+  .primary-nav ul{flex-direction:column;text-align:center;gap:2rem}
+  .primary-nav a{font-size:.9375rem}
+  .nav-toggle{display:inline-flex;z-index:210}
+}
+
+/* ═══ CHAPTER RAIL (signature) ═══ */
+.rail{
+  position:fixed;right:clamp(.8rem,2vw,2rem);top:50%;transform:translateY(-50%);
+  z-index:150;display:flex;flex-direction:column;gap:1.4rem;
+}
+.rail button{
+  display:flex;align-items:center;gap:.7rem;
+  font-size:.5938rem;font-weight:500;letter-spacing:.3em;color:var(--faint);
+  transition:color .3s var(--ease);
+}
+.rail button .tick{width:1.4rem;height:1px;background:var(--line-strong);transition:width .35s var(--ease),background .35s var(--ease)}
+.rail button.active{color:var(--ink)}
+.rail button.active .tick{width:2.4rem;background:var(--bronze)}
+.rail button:hover{color:var(--bronze)}
+@media (max-width:920px),(pointer:coarse){.rail{display:none}}
+
+/* ═══ HERO ═══ */
+.hero{position:relative;min-height:calc(100vh - var(--header-h) - 7.8rem);display:flex;align-items:center;overflow:hidden;background:var(--paper)}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(2rem,5vw,5rem);align-items:center;width:100%}
+.hero-copy{padding-top:1rem}
+.hero-copy .display-xl{margin-block:var(--sp-3) var(--sp-4)}
+.hero-sub{max-width:38ch;font-size:1.0625rem}
+.hero-ctas{display:flex;gap:1rem;flex-wrap:wrap;margin-top:var(--sp-5)}
+.hero-foot{
+  display:flex;gap:2.5rem;margin-top:var(--sp-6);
+  font-size:.625rem;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--faint);
+}
+.hero-visual{position:relative;height:min(78vh,760px);overflow:hidden}
+.hero-visual img{width:100%;height:118%;object-fit:cover;will-change:transform}
+.hero-visual::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px var(--line)}
+.hero-caption{
+  position:absolute;left:1.4rem;bottom:1.2rem;z-index:2;
+  font-size:.5938rem;font-weight:500;letter-spacing:.34em;text-transform:uppercase;color:var(--paper);
+  mix-blend-mode:difference;
+}
+@media (max-width:920px){
+  .hero{min-height:auto;padding-block:0 var(--sp-6)}
+  .hero-grid{grid-template-columns:1fr;padding-top:1.2rem;gap:1.6rem}
+  .hero-visual{height:44vh;min-height:300px;order:-1}
+  .hero-copy{padding-top:0}
+  .hero-foot{flex-direction:column;gap:.6rem;margin-top:var(--sp-5)}
+  .ticker{padding-block:.85rem}
+  .ticker-label{position:static;display:inline-flex;border-right:0;padding-inline:1.25rem 0;margin-bottom:.5rem}
+  .ticker-item{padding-inline:1.4rem;gap:.85rem}
+  .ticker-item img{width:3.2rem;height:4.1rem}
+  .ticker-item .t-name{font-size:1.1rem}
+}
+
+/* ═══ PRODUCT TICKER (sits directly under the fixed header) ═══ */
+:root{--header-h:74px}
+.ticker{
+  margin-top:var(--header-h);
+  border-block:1px solid var(--line);
+  padding-block:1.15rem;overflow:hidden;background:var(--paper);
+  position:relative;z-index:120;
+}
+.ticker-label{
+  position:absolute;left:0;top:0;bottom:0;z-index:3;
+  display:flex;align-items:center;padding-inline:clamp(1.25rem,3vw,2.2rem);
+  background:var(--paper);border-right:1px solid var(--line);
+  font-size:.5938rem;font-weight:600;letter-spacing:.34em;text-transform:uppercase;color:var(--bronze);
+  white-space:nowrap;
+}
+.ticker-track{display:flex;gap:0;width:max-content;will-change:transform}
+.ticker-item{
+  display:flex;align-items:center;gap:1.15rem;padding-inline:2.4rem;
+  border-right:1px solid var(--line);white-space:nowrap;
+}
+.ticker-item img{width:4.2rem;height:5.4rem;object-fit:cover;border-radius:var(--radius)}
+.ticker-item .t-name{font-family:var(--font-display);font-size:1.4rem;font-style:italic;color:var(--ink);line-height:1.15}
+.ticker-item .t-meta{font-size:.625rem;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);margin-top:.15rem}
+.ticker-item .t-price{font-size:.75rem;font-weight:500;letter-spacing:.14em;color:var(--bronze)}
+
+/* ═══ BESTSELLERS — COVERING INFINITE GALLERY ═══
+   Motion model ported from bizarro/infinite-webl-gallery:
+   lerp-eased scroll {current,target}, infinite wrap, auto speed. */
+.bs-gallery{position:relative;height:100vh;min-height:640px;overflow:hidden;background:var(--paper);display:block;padding-block:0}
+.bs-cols{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(.8rem,1.4vw,1.4rem);padding-inline:clamp(.8rem,1.4vw,1.4rem)}
+@media (max-width:820px){.bs-cols{grid-template-columns:repeat(2,1fr)}.bs-col:nth-child(3){display:none}}
+.bs-col{position:relative;overflow:visible}
+.bs-track{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;gap:clamp(.8rem,1.4vw,1.4rem);will-change:transform}
+.bs-tile{position:relative;flex:none;perspective:1400px;display:block}
+.bs-tile .card-flipper{aspect-ratio:3/4}
+.bs-tile:hover .card-flipper{transform:rotateY(180deg)}
+.bs-tile .tile-info{
+  position:absolute;left:1rem;bottom:.9rem;z-index:3;color:var(--paper);
+  mix-blend-mode:difference;pointer-events:none;
+}
+.bs-tile .tile-info strong{font-family:var(--font-display);font-weight:500;font-size:1.2rem;display:block;line-height:1.1}
+.bs-tile .tile-info span{font-size:.5938rem;font-weight:500;letter-spacing:.26em;text-transform:uppercase}
+.bs-overlay{
+  position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;text-align:center;pointer-events:none;
+  background:radial-gradient(ellipse 46% 34% at 50% 50%,rgba(255,255,255,.94) 38%,rgba(255,255,255,.72) 68%,rgba(255,255,255,0) 100%);
+}
+.bs-overlay>*{pointer-events:auto}
+.bs-overlay .section-sub{margin-inline:auto}
+.bs-overlay .link-line{margin-top:var(--sp-4)}
+.motion-off .bs-track{position:relative}
+
+/* ═══ ALL PRODUCTS — THE WHEEL ═══
+   Circular arc gallery (repo demo-2 feel): cards ride a large
+   circle whose centre sits below the stage; drag to spin. */
+.wheel-section{position:relative;height:100vh;min-height:640px;overflow:hidden;padding-block:0;background:var(--mist);display:block}
+.wheel-head{position:absolute;top:clamp(4.5rem,9vh,7rem);left:0;right:0;text-align:center;z-index:6;pointer-events:none}
+.wheel-head .eyebrow{justify-content:center}
+.wheel-stage{position:absolute;inset:0;cursor:grab;touch-action:pan-y}
+.wheel-stage.dragging{cursor:grabbing}
+.wheel-card{
+  position:absolute;left:0;top:0;width:clamp(150px,16vw,240px);aspect-ratio:3/4;
+  will-change:transform;background:var(--paper);overflow:hidden;
+  box-shadow:0 1px 0 var(--line),0 18px 40px -22px rgba(19,18,17,.28);
+  border:6px solid var(--paper);
+}
+.wheel-card img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.wheel-card.is-front{z-index:3}
+.wheel-caption{
+  position:absolute;left:0;right:0;top:38%;transform:translateY(-50%);
+  text-align:center;z-index:5;pointer-events:none;
+}
+.wheel-caption .w-brand{font-size:.625rem;font-weight:500;letter-spacing:.34em;text-transform:uppercase;color:var(--faint)}
+.wheel-caption .w-name{font-family:var(--font-display);font-size:clamp(2.2rem,4.6vw,4rem);font-weight:500;color:var(--ink);line-height:1.05;margin-top:.4rem}
+.wheel-caption .w-price{font-size:.8125rem;font-weight:500;letter-spacing:.2em;color:var(--bronze);margin-top:.7rem}
+.wheel-hint{
+  position:absolute;bottom:clamp(1.4rem,4vh,2.6rem);left:0;right:0;text-align:center;z-index:6;
+  font-size:.5938rem;font-weight:500;letter-spacing:.34em;text-transform:uppercase;color:var(--faint);pointer-events:none;
+}
+@media (max-width:920px){
+  .wheel-section{height:78vh;min-height:540px}
+  .wheel-head{top:clamp(3rem,7vh,4.5rem)}
+  .wheel-card{width:clamp(118px,36vw,170px);border-width:4px}
+  .wheel-caption{top:36%}
+  .wheel-caption .w-name{font-size:clamp(1.7rem,8vw,2.6rem)}
+  .wheel-hint{bottom:1.1rem;padding-inline:1.5rem}
+  .bs-overlay{padding-inline:1.25rem}
+}
+.motion-off .wheel-stage{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;padding:8rem 2rem 4rem;height:auto}
+.motion-off .wheel-card{position:relative;transform:none!important}
+.motion-off .wheel-section{height:auto}
+.motion-off .wheel-caption{display:none}
+.card-flipper{
+  position:relative;aspect-ratio:3/4;
+  transform-style:preserve-3d;
+  transition:transform .8s var(--ease);
+  will-change:transform;
+}
+.card-face{
+  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  overflow:hidden;background:var(--mist);
+}
+.card-face img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}
+.bs-tile:hover .card-front img{transform:scale(1.05)}
+.card-back{transform:rotateY(180deg)}
+.card-back::after{
+  content:"The Back Shot";position:absolute;left:1.1rem;bottom:1rem;
+  font-size:.5625rem;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--paper);
+  mix-blend-mode:difference;
+}
+.product-tag{
+  position:absolute;top:1rem;left:1rem;z-index:2;
+  background:var(--paper);color:var(--ink);padding:.32rem .8rem;
+  font-size:.5625rem;font-weight:600;letter-spacing:.26em;text-transform:uppercase;
+}
+.quick-add{
+  position:absolute;left:1rem;right:1rem;bottom:1rem;z-index:2;
+  background:var(--paper);color:var(--ink);padding:.85rem;
+  font-size:.625rem;font-weight:600;letter-spacing:.26em;text-transform:uppercase;text-align:center;
+  opacity:0;transform:translateY(8px);transition:opacity .35s var(--ease),transform .35s var(--ease);
+}
+.bs-tile:hover .quick-add{opacity:1;transform:none}
+.quick-add:hover{background:var(--ink);color:var(--paper)}
+
+/* ═══ STORY ═══ */
+.story{background:var(--mist)}
+.story-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(2.5rem,6vw,6rem);align-items:center}
+.story-copy p{max-width:44ch}
+.story-copy .drop{margin-top:var(--sp-4);color:var(--ink);font-size:1.125rem;font-weight:400}
+.story-copy p+p{margin-top:var(--sp-3)}
+.story-copy .link-line{margin-top:var(--sp-5)}
+.story-visual{position:relative;height:min(72vh,680px);overflow:hidden}
+.story-visual img{width:100%;height:116%;object-fit:cover;will-change:transform}
+.story-visual::after{content:"";position:absolute;inset:1.1rem;box-shadow:0 0 0 1px var(--paper);pointer-events:none}
+@media (max-width:920px){.story-grid{grid-template-columns:1fr}.story-visual{height:50vh}}
+
+/* ═══ COLLECTIONS — FLIP TILES ═══ */
+.col-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(1rem,2vw,1.6rem)}
+@media (max-width:1080px){.col-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.col-grid{grid-template-columns:1fr}}
+.col-card{perspective:1400px;display:block}
+.col-flipper{
+  position:relative;aspect-ratio:3/4.1;transform-style:preserve-3d;
+  transition:transform .8s var(--ease);will-change:transform;
+}
+.col-card:hover .col-flipper,.col-card:focus-visible .col-flipper{transform:rotateY(180deg)}
+.col-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;background:var(--mist)}
+.col-face img{width:100%;height:100%;object-fit:cover}
+.col-face.back{transform:rotateY(180deg)}
+.col-face.back .veil{position:absolute;inset:0;background:linear-gradient(to top,rgba(19,18,17,.55),rgba(19,18,17,.05) 55%)}
+.col-face.back .col-cta{
+  position:absolute;left:1.2rem;bottom:1.1rem;color:var(--paper);
+  font-size:.625rem;font-weight:600;letter-spacing:.3em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:.6rem;
+}
+.col-face.back .col-cta::after{content:"→"}
+.col-title{
+  display:flex;justify-content:space-between;align-items:baseline;gap:1rem;
+  padding-top:1rem;border-top:1px solid transparent;
+}
+.col-title strong{font-family:var(--font-display);font-weight:500;font-size:1.35rem;color:var(--ink)}
+.col-title small{font-size:.5938rem;font-weight:500;letter-spacing:.28em;text-transform:uppercase;color:var(--faint)}
+.col-card:hover .col-title strong{color:var(--bronze)}
+
+/* ═══ WHY / LEDGER ═══ */
+.why{background:var(--paper)}
+.why-list{border-top:1px solid var(--line);margin-top:var(--sp-5)}
+.why-row{
+  display:grid;grid-template-columns:6rem 1fr 1.4fr;gap:var(--sp-4);align-items:baseline;
+  padding-block:1.9rem;border-bottom:1px solid var(--line);
+}
+.why-row .n{font-size:.625rem;font-weight:500;letter-spacing:.3em;color:var(--bronze)}
+.why-row h3{font-size:1.5rem;font-weight:500}
+.why-row p{font-size:.9375rem;max-width:52ch}
+@media (max-width:760px){.why-row{grid-template-columns:1fr;gap:.5rem}}
+
+/* quote strip inside why chapter */
+.quote-strip{margin-top:var(--sp-6);display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(1.4rem,3vw,3rem)}
+@media (max-width:920px){.quote-strip{grid-template-columns:1fr}}
+.quote{border-left:1px solid var(--line-strong);padding-left:1.4rem}
+.quote blockquote{font-family:var(--font-display);font-style:italic;font-size:1.2rem;color:var(--ink);line-height:1.4}
+.quote footer{margin-top:.9rem;font-size:.625rem;font-weight:500;letter-spacing:.26em;text-transform:uppercase;color:var(--faint)}
+
+/* ═══ NEWSLETTER ═══ */
+.newsletter{background:var(--ink);color:#B9B4AC;text-align:center}
+.newsletter .eyebrow{color:var(--bronze)}
+.newsletter h2{color:var(--paper);margin-top:var(--sp-3)}
+.newsletter .section-sub{margin-inline:auto;color:#B9B4AC}
+.newsletter-form{
+  display:flex;max-width:30rem;margin:var(--sp-5) auto 0;
+  border-bottom:1px solid rgba(255,255,255,.35);
+}
+.newsletter-form input{
+  flex:1;background:none;border:0;color:var(--paper);padding:1rem .2rem;
+  font:inherit;letter-spacing:.05em;
+}
+.newsletter-form input::placeholder{color:#8C8880}
+.newsletter-form input:focus{outline:none}
+.newsletter-form button{
+  color:var(--paper);font-size:.6563rem;font-weight:600;letter-spacing:.3em;text-transform:uppercase;
+  padding-inline:1rem;transition:color .3s var(--ease);
+}
+.newsletter-form button:hover{color:var(--bronze)}
+.newsletter-hint{margin-top:1.2rem;font-size:.6875rem;color:#8C8880}
+
+/* ═══ FOOTER ═══ */
+.site-footer{background:var(--ink);color:#8C8880;padding-block:var(--sp-6) var(--sp-4);border-top:1px solid rgba(255,255,255,.08)}
+.footer-grid{display:grid;grid-template-columns:1.6fr repeat(4,1fr);gap:var(--sp-5)}
+@media (max-width:1000px){.footer-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.footer-grid{grid-template-columns:1fr}}
+.footer-brand .logo{color:var(--paper)}
+.footer-brand p{margin-top:1.2rem;font-size:.875rem;max-width:30ch}
+.footer-col h3{
+  font-family:var(--font-body);font-size:.625rem;font-weight:600;letter-spacing:.3em;
+  text-transform:uppercase;color:#B9B4AC;margin-bottom:1.1rem;
+}
+.footer-col ul{list-style:none;display:grid;gap:.6rem}
+.footer-col a{font-size:.875rem;transition:color .25s}
+.footer-col a:hover{color:var(--paper)}
+.footer-bottom{
+  display:flex;justify-content:space-between;align-items:center;gap:var(--sp-3);flex-wrap:wrap;
+  margin-top:var(--sp-6);padding-top:var(--sp-4);border-top:1px solid rgba(255,255,255,.08);
+  font-size:.75rem;
+}
+.footer-bottom nav{display:flex;gap:1.6rem}
+.footer-bottom a:hover{color:var(--paper)}
+.payments{display:flex;gap:.9rem;font-size:.5938rem;font-weight:600;letter-spacing:.14em;color:#6E6A63}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- ══ HEADER ══ -->
+<header class="site-header" id="site-header">
+  <div class="container header-inner">
+    <a class="logo" href="/">STAR<span>SCENTS</span></a>
+    <nav class="primary-nav" id="primary-nav" aria-label="Primary">
+      <ul>
+        <li><a href="/collections/bestsellers">Bestsellers</a></li>
+        <li><a href="/collections/for-him">For Him</a></li>
+        <li><a href="/collections/for-her">For Her</a></li>
+        <li><a href="/collections/oud">Oud</a></li>
+        <li><a href="/pages/our-story">Story</a></li>
+      </ul>
+    </nav>
+    <div class="header-tools">
+      <a href="/search" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></a>
+      <a href="/cart" aria-label="Cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 8h18M3 16h18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ══ CHAPTER RAIL (snap navigation) ══ -->
+<nav class="rail" id="rail" aria-label="Page chapters"></nav>
+
+<main id="main">
+
+<!-- ══ TOP PRODUCTS TICKER — directly under the nav ══ (Shopify: custom liquid) -->
+<div class="ticker" data-shopify-section="top-products-ticker" aria-label="Top products this week">
+  <span class="ticker-label">Top Products — This Week</span>
+  <div class="ticker-track" id="ticker-track"></div>
+</div>
+
+<!-- ══ CH.01 HERO ══ (Shopify: image-banner) -->
+<section class="hero chapter" data-snap data-chapter="Maison" data-shopify-section="hero" aria-labelledby="hero-title">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow" data-reveal>Dubai's House of Fragrance</p>
+      <h1 class="display-xl" id="hero-title">
+        <span class="line-mask"><span>Worn Like</span></span>
+        <span class="line-mask"><span>a <em class="serif-i">Signature.</em></span></span>
+      </h1>
+      <p class="hero-sub" data-reveal>Rare Middle Eastern houses and the world's finest designer names — curated in Dubai, delivered duty-paid.</p>
+      <div class="hero-ctas" data-reveal>
+        <a class="btn btn-solid" href="/collections/bestsellers">Shop Bestsellers</a>
+        <a class="btn" href="/pages/our-story">Our Story</a>
+      </div>
+      <div class="hero-foot" data-reveal>
+        <p>Est. Dubai</p><p>London · Melbourne · Kuala Lumpur</p>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=1400&q=80" alt="Gold-toned eau de parfum bottle in soft daylight" fetchpriority="high" data-hero-img>
+      <p class="hero-caption">Khamrah · Batch 24-311 · Verified</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CH.02 BESTSELLERS — COVERING INFINITE GALLERY ══ (Shopify: featured-collection) -->
+<section class="bs-gallery chapter" data-snap data-chapter="Bestsellers" data-shopify-section="featured-collection" aria-labelledby="bestsellers-title">
+  <div class="bs-cols" id="bs-cols" aria-hidden="false"></div>
+  <div class="bs-overlay">
+    <p class="eyebrow centered" data-reveal>Bestsellers</p>
+    <h2 class="display-lg" id="bestsellers-title" style="margin-top:var(--sp-3)">The <em class="serif-i">Signatures</em></h2>
+    <p class="section-sub" data-reveal>Hover to pause the shelf — and to see the back shot.</p>
+    <a class="link-line" href="/collections/bestsellers" data-reveal><span class="dash" aria-hidden="true"></span>View All</a>
+  </div>
+</section>
+
+<!-- ══ CH.03 ALL PRODUCTS — THE WHEEL ══ (Shopify: featured-collection-2)
+     Circular infinite gallery, motion model referenced from
+     github.com/bizarro/infinite-webl-gallery (lerp scroll + wrap). -->
+<section class="wheel-section chapter" data-snap data-chapter="All Products" data-shopify-section="all-products-wheel" aria-labelledby="wheel-title">
+  <div class="wheel-head">
+    <p class="eyebrow centered" data-reveal>Every Bottle</p>
+    <h2 class="display-lg" id="wheel-title" style="margin-top:var(--sp-2)">All <em class="serif-i">Products</em></h2>
+  </div>
+  <div class="wheel-caption" aria-live="polite">
+    <p class="w-brand" id="wheel-brand">Lattafa</p>
+    <p class="w-name" id="wheel-name">Khamrah</p>
+    <p class="w-price" id="wheel-price">£34.00</p>
+  </div>
+  <div class="wheel-stage" id="wheel-stage"></div>
+  <p class="wheel-hint">Drag to spin — the front bottle is named above</p>
+</section>
+
+<!-- ══ CH.03 STORY ══ (Shopify: image-with-text) -->
+<section class="story chapter" data-snap data-chapter="Story" data-shopify-section="image-with-text" aria-labelledby="story-title">
+  <div class="container story-grid">
+    <div class="story-copy" data-reveal>
+      <p class="eyebrow">Our Story</p>
+      <h2 class="display-lg" id="story-title" style="margin-top:var(--sp-3)">Born in Dubai.<br>Built for the <em class="serif-i">World.</em></h2>
+      <p class="drop">Fragrance is the one luxury that travels with you — long after everything else is forgotten.</p>
+      <p>We curate from the crossroads where centuries-old oud houses meet the world's designer boutiques, and ship every verified bottle to the UK, Australia and Malaysia.</p>
+      <a class="link-line" href="/pages/our-story"><span class="dash" aria-hidden="true"></span>Read the Full Story</a>
+    </div>
+    <div class="story-visual" data-reveal>
+      <img src="https://images.unsplash.com/photo-1587017539504-67cfbddac569?auto=format&fit=crop&w=1100&q=80" alt="Amber perfume bottle catching warm light" loading="lazy" data-parallax-img>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CH.04 COLLECTIONS ══ (Shopify: collection-list) -->
+<section class="chapter" data-snap data-chapter="Collections" data-shopify-section="collection-list" aria-labelledby="collections-title">
+  <div class="container">
+    <div class="section-head">
+      <div data-reveal>
+        <p class="eyebrow">The Edit</p>
+        <h2 class="display-lg" id="collections-title">Explore the <em class="serif-i">Collections</em></h2>
+      </div>
+      <a class="link-line" href="/collections" data-reveal><span class="dash" aria-hidden="true"></span>All Collections</a>
+    </div>
+    <div class="col-grid" id="col-grid" data-stagger></div>
+  </div>
+</section>
+
+<!-- ══ CH.05 WHY + PROOF ══ (Shopify: multicolumn + reviews) -->
+<section class="why chapter" data-snap data-chapter="Promise" data-shopify-section="why-ledger" aria-labelledby="why-title">
+  <div class="container">
+    <div data-reveal>
+      <p class="eyebrow">The StarScents Promise</p>
+      <h2 class="display-lg" id="why-title" style="margin-top:var(--sp-3)">Four Things We <em class="serif-i">Never</em> Compromise</h2>
+    </div>
+    <div class="why-list" data-stagger>
+      <div class="why-row"><span class="n">No. 1</span><h3>Sourced in Dubai</h3><p>Direct from the region's most respected houses.</p></div>
+      <div class="why-row"><span class="n">No. 2</span><h3>Guaranteed Authentic</h3><p>Every batch verified. Every code traceable.</p></div>
+      <div class="why-row"><span class="n">No. 3</span><h3>Duty-Paid Pricing</h3><p>The checkout price is the final price.</p></div>
+      <div class="why-row"><span class="n">No. 4</span><h3>Tracked Delivery</h3><p>Dispatched from Dubai to your door.</p></div>
+    </div>
+    <div class="quote-strip" data-stagger>
+      <article class="quote">
+        <blockquote>Five days to London, beautifully packed. The batch code checked out.</blockquote>
+        <footer>Sarah M. — London</footer>
+      </article>
+      <article class="quote">
+        <blockquote>Genuine Middle Eastern houses in Australia, no surprises at the door.</blockquote>
+        <footer>Daniel R. — Melbourne</footer>
+      </article>
+      <article class="quote">
+        <blockquote>Found my signature on the second sample. Full bottle within the week.</blockquote>
+        <footer>Aisyah K. — Kuala Lumpur</footer>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CH.06 NEWSLETTER ══ (Shopify: newsletter) -->
+<section class="newsletter chapter" data-snap data-chapter="Circle" data-shopify-section="newsletter" aria-labelledby="newsletter-title">
+  <div class="container" data-reveal>
+    <p class="eyebrow centered">The Circle</p>
+    <h2 class="display-lg" id="newsletter-title">Join the <em class="serif-i">Circle</em></h2>
+    <p class="section-sub">Early access, fragrance guides, 10% off your first order.</p>
+    <form class="newsletter-form" action="/contact#newsletter" method="post">
+      <label for="newsletter-email" class="skip-link">Email address</label>
+      <input id="newsletter-email" type="email" name="contact[email]" placeholder="Your email address" autocomplete="email" required>
+      <button type="submit">Subscribe</button>
+    </form>
+    <p class="newsletter-hint">One considered email a week. Unsubscribe anytime.</p>
+  </div>
+</section>
+
+</main>
+
+<!-- ══ FOOTER ══ (Shopify: footer) -->
+<footer class="site-footer" data-shopify-section="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="logo" href="/">STAR<span>SCENTS</span></a>
+        <p>Rare Middle Eastern houses and designer names, curated in Dubai.</p>
+      </div>
+      <nav class="footer-col" aria-label="Shop">
+        <h3>Shop</h3>
+        <ul>
+          <li><a href="/collections/for-him">For Him</a></li>
+          <li><a href="/collections/for-her">For Her</a></li>
+          <li><a href="/collections/oud">Oud</a></li>
+          <li><a href="/collections/samples">Sample Sets</a></li>
+        </ul>
+      </nav>
+      <nav class="footer-col" aria-label="Company">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="/pages/our-story">Our Story</a></li>
+          <li><a href="/blogs/journal">Journal</a></li>
+          <li><a href="/pages/contact">Contact</a></li>
+        </ul>
+      </nav>
+      <nav class="footer-col" aria-label="Support">
+        <h3>Support</h3>
+        <ul>
+          <li><a href="/pages/track-order">Track Order</a></li>
+          <li><a href="/pages/shipping">Shipping</a></li>
+          <li><a href="/pages/returns">Returns</a></li>
+        </ul>
+      </nav>
+      <div class="footer-col">
+        <h3>Delivering To</h3>
+        <ul>
+          <li><a href="/en-gb">United Kingdom</a></li>
+          <li><a href="/en-au">Australia</a></li>
+          <li><a href="/en-my">Malaysia</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 StarScents. All rights reserved.</p>
+      <nav aria-label="Legal">
+        <a href="/policies/privacy-policy">Privacy</a>
+        <a href="/policies/terms-of-service">Terms</a>
+      </nav>
+      <div class="payments" aria-label="Accepted payment methods">
+        <span>VISA</span><span>MASTERCARD</span><span>SHOP PAY</span><span>APPLE PAY</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+'use strict';
+var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+var header = document.getElementById('site-header');
+
+/* ─────────────────────────────────────────────
+   PRODUCT DATA (Shopify: replace with liquid loop)
+   front = hero shot, back = back/alternate shot
+───────────────────────────────────────────── */
+var U = function(id,w){return 'https://images.unsplash.com/'+id+'?auto=format&fit=crop&w='+(w||800)+'&q=80';};
+var PRODUCTS = [
+  {brand:'Lattafa', name:'Khamrah', price:'£34.00', tag:'Bestseller',
+   front:U('photo-1585386959984-a4155224a1ad'), back:U('photo-1594035910387-fea47794261f')},
+  {brand:'Rasasi', name:'Hawas for Her', price:'£45.00', was:'£52.00', tag:'',
+   front:U('photo-1541643600914-78b084683601'), back:U('photo-1557170334-a9632e77c6e4')},
+  {brand:'Afnan', name:'9pm Extrait', price:'£38.00', tag:'New',
+   front:U('photo-1523293182086-7651a899d37f'), back:U('photo-1588405748880-12d1d2a59f75')},
+  {brand:'Armaf', name:'Club de Nuit', price:'£29.00', tag:'',
+   front:U('photo-1547887537-6158d64c35b3'), back:U('photo-1587017539504-67cfbddac569')},
+  {brand:'Swiss Arabian', name:'Shaghaf Oud', price:'£42.00', tag:'',
+   front:U('photo-1557170334-a9632e77c6e4'), back:U('photo-1585386959984-a4155224a1ad')},
+  {brand:'Al Haramain', name:'Amber Oud', price:'£56.00', tag:'Rare',
+   front:U('photo-1587017539504-67cfbddac569'), back:U('photo-1523293182086-7651a899d37f')},
+  {brand:'Ajmal', name:'Wisal Dhahab', price:'£31.00', tag:'',
+   front:U('photo-1588405748880-12d1d2a59f75'), back:U('photo-1541643600914-78b084683601')},
+  {brand:'Amouage', name:'Reflection Man', price:'£240.00', tag:'Icon',
+   front:U('photo-1594035910387-fea47794261f'), back:U('photo-1547887537-6158d64c35b3')}
+];
+var COLLECTIONS = [
+  {name:'For Him', count:'42 scents', href:'/collections/for-him',
+   front:U('photo-1523293182086-7651a899d37f',900), back:U('photo-1547887537-6158d64c35b3',900)},
+  {name:'For Her', count:'38 scents', href:'/collections/for-her',
+   front:U('photo-1541643600914-78b084683601',900), back:U('photo-1557170334-a9632e77c6e4',900)},
+  {name:'Oud & Attar', count:'27 scents', href:'/collections/oud',
+   front:U('photo-1585386959984-a4155224a1ad',900), back:U('photo-1587017539504-67cfbddac569',900)},
+  {name:'Designer', count:'31 scents', href:'/collections/designer',
+   front:U('photo-1588405748880-12d1d2a59f75',900), back:U('photo-1594035910387-fea47794261f',900)},
+  {name:'New Arrivals', count:'This month', href:'/collections/new',
+   front:U('photo-1594035910387-fea47794261f',900), back:U('photo-1585386959984-a4155224a1ad',900)},
+  {name:'Gift Sets', count:'Curated', href:'/collections/gifts',
+   front:U('photo-1547887537-6158d64c35b3',900), back:U('photo-1588405748880-12d1d2a59f75',900)}
+];
+
+/* ─── card templates ─── */
+function collectionCard(c){
+  var a = document.createElement('a');
+  a.className = 'col-card';
+  a.href = c.href;
+  a.innerHTML =
+    '<div class="col-flipper">'+
+      '<div class="col-face front"><img src="'+c.front+'" alt="" loading="lazy"></div>'+
+      '<div class="col-face back"><img src="'+c.back+'" alt="" loading="lazy">'+
+        '<span class="veil" aria-hidden="true"></span>'+
+        '<span class="col-cta">Shop the Edit</span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="col-title"><strong>'+c.name+'</strong><small>'+c.count+'</small></div>';
+  return a;
+}
+
+/* ─── initial render ─── */
+/* header height → CSS var (ticker offset) */
+function setHeaderH(){var h=header.offsetHeight;if(h>0)document.documentElement.style.setProperty('--header-h',h+'px');}
+setHeaderH();window.addEventListener('resize',setHeaderH);
+
+/* bestsellers covering gallery: 3 columns of tiles, content doubled per column for seamless wrap */
+var bsCols = document.getElementById('bs-cols');
+var COLUMN_ORDERS = [
+  [0,3,6,1,4],   /* each column shows 5 products in its own order */
+  [2,5,0,7,3],
+  [4,7,1,6,2]
+];
+function bsTile(p){
+  var a=document.createElement('a');
+  a.className='bs-tile';
+  a.href='/products/'+p.name.toLowerCase().replace(/\s+/g,'-');
+  a.innerHTML=
+    '<div class="card-flipper">'+
+      '<div class="card-face card-front">'+
+        (p.tag?'<span class="product-tag">'+p.tag+'</span>':'')+
+        '<img src="'+p.front+'" alt="'+p.name+' — front" loading="lazy">'+
+      '</div>'+
+      '<div class="card-face card-back">'+
+        '<img src="'+p.back+'" alt="'+p.name+' — back shot" loading="lazy">'+
+      '</div>'+
+    '</div>'+
+    '<span class="tile-info"><strong>'+p.name+'</strong><span>'+p.brand+' · '+p.price+'</span></span>';
+  return a;
+}
+COLUMN_ORDERS.forEach(function(order){
+  var col=document.createElement('div');col.className='bs-col';
+  var track=document.createElement('div');track.className='bs-track';
+  order.forEach(function(idx){track.appendChild(bsTile(PRODUCTS[idx]));});
+  order.forEach(function(idx){track.appendChild(bsTile(PRODUCTS[idx]));}); /* duplicate → wrap at half */
+  col.appendChild(track);bsCols.appendChild(col);
+});
+
+/* wheel cards — 28 slots looping the catalogue so the visible arc is always full */
+var wheelStage=document.getElementById('wheel-stage');
+var WHEEL_SLOTS=28;
+for(var wi=0;wi<WHEEL_SLOTS;wi++){
+  var wp=PRODUCTS[wi%PRODUCTS.length];
+  var wc=document.createElement('a');
+  wc.className='wheel-card';
+  wc.href='/products/'+wp.name.toLowerCase().replace(/\s+/g,'-');
+  wc.innerHTML='<img src="'+wp.front+'" alt="'+wp.name+'" loading="lazy" draggable="false">';
+  wheelStage.appendChild(wc);
+}
+
+var colGrid = document.getElementById('col-grid');
+var COL_VISIBLE = 4, colCursor = 0;
+for (var j=0;j<COL_VISIBLE;j++) colGrid.appendChild(collectionCard(COLLECTIONS[j]));
+colCursor = COL_VISIBLE;
+
+/* ─── ticker render (duplicate once for seamless loop) ─── */
+var tickerTrack = document.getElementById('ticker-track');
+function tickerHTML(){
+  return PRODUCTS.map(function(p){
+    return '<div class="ticker-item">'+
+      '<img src="'+p.front+'" alt="" loading="lazy">'+
+      '<div><div class="t-name">'+p.name+'</div><div class="t-meta">'+p.brand+'</div></div>'+
+      '<span class="t-price">'+p.price+'</span>'+
+    '</div>';
+  }).join('');
+}
+tickerTrack.innerHTML = tickerHTML() + tickerHTML(); /* 2 copies → loop at -50% */
+
+/* ─── header state ─── */
+function onScroll(){header.classList.toggle('scrolled',window.scrollY>40);}
+window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+/* ─── mobile nav ─── */
+var toggle=document.querySelector('.nav-toggle'),nav=document.getElementById('primary-nav');
+toggle.addEventListener('click',function(){
+  var open=nav.classList.toggle('open');
+  toggle.setAttribute('aria-expanded',open);
+  toggle.setAttribute('aria-label',open?'Close menu':'Open menu');
+  document.body.style.overflow=open?'hidden':'';
+});
+nav.addEventListener('click',function(e){
+  if(e.target.closest('a')){nav.classList.remove('open');toggle.setAttribute('aria-expanded','false');document.body.style.overflow='';}
+});
+
+/* ─── chapter rail (built from data-snap sections) ─── */
+var chapters = Array.prototype.slice.call(document.querySelectorAll('[data-snap]'));
+var rail = document.getElementById('rail');
+chapters.forEach(function(sec,idx){
+  var b=document.createElement('button');
+  b.type='button';
+  b.innerHTML='<span class="tick" aria-hidden="true"></span>'+String(idx+1).padStart(2,'0')+' '+sec.getAttribute('data-chapter');
+  b.addEventListener('click',function(){
+    sec.scrollIntoView({behavior:reduced?'auto':'smooth'});
+  });
+  rail.appendChild(b);
+});
+var railBtns=rail.querySelectorAll('button');
+function setActiveChapter(idx){
+  railBtns.forEach(function(b,i){b.classList.toggle('active',i===idx);});
+}
+setActiveChapter(0);
+
+/* ═════════ MOTION (GSAP) ═════════ */
+if (reduced || typeof gsap==='undefined'){
+  document.body.classList.add('motion-off');
+  /* still cycle products without animation so content stays fresh */
+  return;
+}
+gsap.registerPlugin(ScrollTrigger);
+
+/* ── hero load choreography ── */
+var tl=gsap.timeline({defaults:{ease:'expo.out'}});
+tl.from('[data-hero-img]',{scale:1.14,duration:2.4,ease:'power2.out'},0)
+  .to('.hero .line-mask > span',{y:0,duration:1.1,stagger:.14},.3)
+  .to('.hero .eyebrow',{opacity:1,duration:.8},.45)
+  .to('.hero-sub',{opacity:1,duration:.9},.8)
+  .fromTo('.hero-sub',{y:16},{y:0,duration:.9},'<')
+  .to('.hero-ctas',{opacity:1,duration:.9},1)
+  .fromTo('.hero-ctas',{y:16},{y:0,duration:.9},'<')
+  .to('.hero-foot',{opacity:1,duration:1},1.25);
+
+/* ── scroll reveals (skill preset: subtle y, power1.out) ── */
+gsap.utils.toArray('[data-reveal]:not(.hero [data-reveal])').forEach(function(el){
+  gsap.fromTo(el,{opacity:0,y:22},{
+    opacity:1,y:0,duration:.8,ease:'power1.out',
+    scrollTrigger:{trigger:el,start:'top 88%'}
+  });
+});
+
+/* ── staggered groups ── */
+gsap.utils.toArray('[data-stagger]').forEach(function(group){
+  gsap.fromTo(group.children,{opacity:0,y:30},{
+    opacity:1,y:0,duration:.7,stagger:.09,ease:'power2.out',
+    scrollTrigger:{trigger:group,start:'top 86%'}
+  });
+});
+
+/* ── subtle parallax (imagery only) ── */
+gsap.fromTo('[data-hero-img]',{yPercent:-6},{yPercent:6,ease:'none',
+  scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:.5}});
+gsap.fromTo('[data-parallax-img]',{yPercent:-7},{yPercent:7,ease:'none',
+  scrollTrigger:{trigger:'.story-visual',start:'top bottom',end:'bottom top',scrub:.5}});
+
+/* ── product ticker: seamless linear loop, pause on hover ── */
+var tickerTween=gsap.to(tickerTrack,{xPercent:-50,ease:'none',duration:38,repeat:-1});
+tickerTrack.closest('.ticker').addEventListener('mouseenter',function(){gsap.to(tickerTween,{timeScale:0,duration:.4});});
+tickerTrack.closest('.ticker').addEventListener('mouseleave',function(){gsap.to(tickerTween,{timeScale:1,duration:.4});});
+
+/* ─────────────────────────────────────────────
+   SNAP SCROLL — function-based snapTo.
+   Verified against GSAP docs: ScrollTrigger's
+   `snap.snapTo` accepts a function receiving
+   normalized progress (0–1) and returning the
+   adjusted progress. This handles mixed-height
+   sections, unlike 1/(n-1) which requires every
+   panel to be exactly 100vh.
+   Desktop + fine pointer only; touch scrolling
+   keeps native physics.
+───────────────────────────────────────────── */
+var mm=gsap.matchMedia();
+mm.add('(min-width: 921px) and (hover: hover) and (pointer: fine)',function(){
+    var points=[];
+    function measure(){
+      var max=ScrollTrigger.maxScroll(window);
+      points=chapters.map(function(sec,i){
+        if(i===0) return 0; /* chapter 01 = page top (ticker visible under nav) */
+        return Math.min(1,(sec.getBoundingClientRect().top+window.scrollY)/max);
+      });
+    }
+    measure();
+    ScrollTrigger.addEventListener('refresh',measure);
+    ScrollTrigger.create({
+      trigger:document.body,
+      start:0,
+      end:'max',
+      snap:{
+        snapTo:function(progress){
+          var max=ScrollTrigger.maxScroll(window);
+          var tolerance=(window.innerHeight*.42)/max; /* only take over near a chapter line */
+          var best=progress,dist=1;
+          for(var i=0;i<points.length;i++){
+            var d=Math.abs(points[i]-progress);
+            if(d<dist){dist=d;best=points[i];}
+          }
+          return dist<tolerance?best:progress;
+        },
+        duration:{min:.25,max:.7},
+        delay:.1,
+        directional:true, /* favor the direction the user was scrolling */
+        ease:'power2.inOut'
+      },
+      onUpdate:function(self){
+        var max=ScrollTrigger.maxScroll(window);
+        var y=self.progress*max+window.innerHeight*.5;
+        var idx=0;
+        for(var i=0;i<points.length;i++){ if(points[i]*max<=y) idx=i; }
+        setActiveChapter(idx);
+      }
+    });
+});
+/* rail highlight still works without snap on smaller screens */
+mm.add('(max-width: 920px)',function(){
+  chapters.forEach(function(sec,idx){
+    ScrollTrigger.create({trigger:sec,start:'top center',end:'bottom center',
+      onToggle:function(st){if(st.isActive)setActiveChapter(idx);}});
+  });
+});
+
+/* ─────────────────────────────────────────────
+   TIMED ROTATION — every 3s one card flips out
+   and the next product flips in (round-robin,
+   one at a time so the shelf feels alive, not
+   chaotic). Progress bar shows the 3s cycle.
+   Paused while hovering the grid or when the
+   chapter is off-screen.
+───────────────────────────────────────────── */
+function makeRotator(gridEl,data,visible,startCursor,buildCard,intervalMS){
+  var cur=startCursor, slot=0, hovering=false, inView=false;
+  ScrollTrigger.create({
+    trigger:gridEl,start:'top 90%',end:'bottom 10%',
+    onToggle:function(st){inView=st.isActive;}
+  });
+  gridEl.addEventListener('mouseenter',function(){hovering=true;});
+  gridEl.addEventListener('mouseleave',function(){hovering=false;});
+  setInterval(function(){
+    if(hovering||!inView||document.hidden)return;
+    var oldCard=gridEl.children[slot];
+    if(!oldCard)return;
+    var next=data[cur%data.length];
+    cur++;
+    var newCard=buildCard(next);
+    gsap.to(oldCard,{rotateY:90,opacity:0,duration:.4,ease:'power2.in',
+      transformPerspective:1200,
+      onComplete:function(){
+        gridEl.replaceChild(newCard,oldCard);
+        gsap.fromTo(newCard,{rotateY:-90,opacity:0},{rotateY:0,opacity:1,duration:.5,ease:'power2.out',transformPerspective:1200,clearProps:'transform,opacity'});
+      }});
+    slot=(slot+1)%visible;
+  },intervalMS);
+}
+makeRotator(colGrid,COLLECTIONS,COL_VISIBLE,colCursor,collectionCard,3000);
+
+/* ─────────────────────────────────────────────
+   BESTSELLERS COVERING GALLERY
+   Engine ported from bizarro/infinite-webl-gallery:
+   scroll {ease, current, target} advanced every frame,
+   current = lerp(current, target, ease), content
+   duplicated once and wrapped with modulo — the
+   DOM equivalent of the repo's `extra ± width`.
+   Hover eases speed to 0 (smooth stop, no jerk).
+───────────────────────────────────────────── */
+function lerp(a,b,t){return a+(b-a)*t;}
+(function bsGallery(){
+  var section=document.querySelector('.bs-gallery');
+  var cols=Array.prototype.slice.call(section.querySelectorAll('.bs-col'));
+  var state=cols.map(function(col,i){
+    return {
+      track:col.querySelector('.bs-track'),
+      pos:0, half:0,
+      dir:(i%2===0?1:-1),            /* alternate directions per column */
+      base:(28+i*8)                  /* px per second, slight variance = depth */
+    };
+  });
+  var speed={current:0,target:1};    /* global multiplier */
+  var inView=false;
+  function measureCols(){
+    state.forEach(function(s){
+      s.half=s.track.scrollHeight/2;
+      if(s.dir===-1&&s.pos===0)s.pos=-s.half; /* upward columns start shifted */
+    });
+  }
+  measureCols();
+  window.addEventListener('resize',measureCols);
+  window.addEventListener('load',measureCols);
+  ScrollTrigger.create({trigger:section,start:'top bottom',end:'bottom top',
+    onToggle:function(st){inView=st.isActive;}});
+  section.addEventListener('mouseenter',function(){speed.target=0;});
+  section.addEventListener('mouseleave',function(){speed.target=1;});
+  var last=performance.now();
+  gsap.ticker.add(function(){
+    var now=performance.now(),dt=Math.min((now-last)/1000,.05);last=now;
+    if(!inView)return;
+    speed.current=lerp(speed.current,speed.target,.06); /* repo ease feel */
+    state.forEach(function(s){
+      if(!s.half)return;
+      s.pos+=s.dir*s.base*speed.current*dt;
+      /* infinite wrap — modulo into [-half, 0) */
+      var y=s.pos%s.half;
+      if(y>0)y-=s.half;
+      s.track.style.transform='translate3d(0,'+y+'px,0)';
+    });
+  });
+})();
+
+/* ─────────────────────────────────────────────
+   ALL PRODUCTS — THE WHEEL
+   Cards ride a circle whose centre sits far
+   below the stage (visible arc at the top, CRL
+   style). Same scroll object as the repo:
+   {ease:.05, current, target, last}; auto speed
+   + drag input ×2 (repo's onTouchMove factor);
+   velocity tilts the cards — the DOM stand-in
+   for the repo's sin() vertex bend.
+───────────────────────────────────────────── */
+(function wheel(){
+  var stage=document.getElementById('wheel-stage');
+  var section=document.querySelector('.wheel-section');
+  var cards=Array.prototype.slice.call(stage.children);
+  var n=cards.length;
+  var rot={ease:.05,current:0,target:0,last:0};
+  var AUTO=4.2;                      /* deg per second */
+  var autoOn=true,inView=false,down=false,startX=0,startRot=0;
+  var W=0,H=0,R=0,cx=0,cy=0,step=360/n;
+  var nameEl=document.getElementById('wheel-name'),
+      brandEl=document.getElementById('wheel-brand'),
+      priceEl=document.getElementById('wheel-price');
+  var frontIdx=-1;
+
+  function resize(){
+    W=stage.clientWidth;H=stage.clientHeight;
+    R=Math.max(W*1.15,900);          /* large radius → shallow, wide arc */
+    cx=W/2;
+    cy=H+R-H*.42;                    /* circle top sits at 58% of stage height */
+  }
+  resize();window.addEventListener('resize',resize);
+
+  ScrollTrigger.create({trigger:section,start:'top bottom',end:'bottom top',
+    onToggle:function(st){inView=st.isActive;}});
+
+  /* drag to spin (repo: distance × factor drives target) */
+  function px2deg(px){return px*(120/W);}
+  stage.addEventListener('pointerdown',function(e){
+    down=true;startX=e.clientX;startRot=rot.target;autoOn=false;
+    stage.classList.add('dragging');stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener('pointermove',function(e){
+    if(!down)return;
+    rot.target=startRot+px2deg(e.clientX-startX);
+  });
+  function release(){down=false;stage.classList.remove('dragging');
+    gsap.delayedCall(2.2,function(){autoOn=true;});}
+  stage.addEventListener('pointerup',release);
+  stage.addEventListener('pointercancel',release);
+  stage.addEventListener('mouseleave',function(){if(down)release();});
+  /* hovering a card pauses the auto spin */
+  stage.addEventListener('mouseover',function(e){if(e.target.closest('.wheel-card'))autoOn=false;});
+  stage.addEventListener('mouseout',function(e){if(e.target.closest('.wheel-card')&&!down)autoOn=true;});
+  /* suppress click after a real drag */
+  stage.addEventListener('click',function(e){
+    if(Math.abs(rot.current-rot.last)>.08)e.preventDefault();
+  },true);
+
+  var lastT=performance.now(),placedOnce=false;
+  gsap.ticker.add(function(){
+    var now=performance.now(),dt=Math.min((now-lastT)/1000,.05);lastT=now;
+    if(!inView&&placedOnce)return;
+    placedOnce=true;
+    if(autoOn&&!down)rot.target+=AUTO*dt;
+    rot.current=lerp(rot.current,rot.target,rot.ease);
+    var vel=rot.current-rot.last;                 /* repo: strength uniform */
+    var tilt=Math.max(-10,Math.min(10,vel*26));
+    var best=1e9,bestI=-1;
+    cards.forEach(function(card,i){
+      var a=(i*step+rot.current)%360;if(a<0)a+=360;
+      var rad=(a-180)*Math.PI/180;                /* a=180 → apex (top) */
+      var x=cx+Math.sin(rad)*R;
+      var y=cy-Math.cos(rad)*R;
+      var deg=Math.sin(rad)*26;                   /* tangent lean, clamped arc */
+      card.style.transform='translate3d('+(x)+'px,'+(y)+'px,0) translate(-50%,-50%) rotate('+(deg+tilt*Math.cos(rad)*.3)+'deg)';
+      var d=Math.min(Math.abs(a-180),360-Math.abs(a-180));
+      if(d<best){best=d;bestI=i;}
+    });
+    if(bestI!==frontIdx&&best<step*.55){
+      frontIdx=bestI;
+      cards.forEach(function(c,i){c.classList.toggle('is-front',i===bestI);});
+      var p=PRODUCTS[bestI%PRODUCTS.length];
+      gsap.timeline()
+        .to([brandEl,nameEl,priceEl],{opacity:0,y:-8,duration:.18,ease:'power1.in',stagger:.02})
+        .add(function(){brandEl.textContent=p.brand;nameEl.textContent=p.name;priceEl.textContent=p.price;})
+        .to([brandEl,nameEl,priceEl],{opacity:1,y:0,duration:.3,ease:'power2.out',stagger:.03});
+    }
+    rot.last=rot.current;
+  });
+})();
+
+/* refresh trigger positions once images settle */
+window.addEventListener('load',function(){ScrollTrigger.refresh();});
+})();
+</script>
+</body>
+</html>
