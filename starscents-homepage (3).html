@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>StarScents — Dubai's House of Fragrance</title>
+<meta name="description" content="Rare Middle Eastern fragrance houses and the world's finest designer names — sourced in Dubai, delivered duty-paid.">
+<!--
+  ═══════════════════════════════════════════════════════════════════
+  STARSCENTS — MERGED HOMEPAGE (Preview build)
+  · Merges both Stitch layouts into one page:
+      01 Hero            (stitch 1+2)
+      02 Collections     (Shop by Collection — stitch 1+2)
+      03 Curated Edit    (product grid, Buy Now / Add to Cart ALWAYS visible)
+      04 The Signatures  (VIDEO covering gallery — your prepared design,
+                          videos fully visible: no white wash, compact scrim)
+      05 All Products    (drag-to-spin wheel — stitch 2 / your design)
+      06 Scent by Vibe   (bento — stitch 1+2)
+      07 Testimonials    (stitch 2)
+      08 Newsletter + Footer
+  · Motion: GSAP + ScrollTrigger — hero line-mask text reveal, subtle
+    scroll reveals (y:14, power1.out), staggered groups, image parallax,
+    infinite video columns (lerp), wheel spin. All gated behind
+    prefers-reduced-motion. Videos only play while in the viewport.
+  · Performance: lazy images, poster + preload="metadata" videos,
+    content-visibility on below-fold chapters, system fallback fonts.
+  · Accessibility: skip link, landmarks, focus-visible, 44px targets,
+    aria labels, motion-off fallback renders everything static.
+  · REPLACE the placeholder .mp4 URLs (marked "REPLACE-VIDEO") with your
+    real product clips — poster images already show your bottles.
+  ═══════════════════════════════════════════════════════════════════
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..800;1,6..96,400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══ TOKENS ═══ */
+:root{
+  --paper:#FBF9F5;           /* page */
+  --mist:#F3F1EC;            /* soft panel */
+  --card:#FFFFFF;
+  --ink:#1B1C1A;             /* near-black text */
+  --stone:#6E6A63;           /* secondary text */
+  --faint:#A9A49D;           /* labels */
+  --navy:#162839;            /* primary action */
+  --navy-deep:#0E1B28;
+  --bronze:#9A7B4F;          /* single accent */
+  --bronze-deep:#7C6039;
+  --line:rgba(27,28,26,.10);
+  --line-strong:rgba(27,28,26,.22);
+  --font-display:'Bodoni Moda',Didot,Georgia,serif;
+  --font-body:'Plus Jakarta Sans',Futura,'Century Gothic',sans-serif;
+  --sp-1:.5rem;--sp-2:1rem;--sp-3:1.5rem;--sp-4:2rem;--sp-5:3rem;--sp-6:4.5rem;--sp-7:6.5rem;
+  --container:1320px;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --radius:2px;
+  --header-h:72px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);font-weight:300;font-size:1rem;line-height:1.65;
+  letter-spacing:.01em;color:var(--stone);background:var(--paper);
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);
+}
+img,video{display:block;max-width:100%;height:auto}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;background:none;border:0;color:inherit}
+::selection{background:var(--navy);color:var(--paper)}
+:focus-visible{outline:2px solid var(--bronze);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+/* ═══ UTILITIES ═══ */
+.container{max-width:var(--container);margin-inline:auto;padding-inline:clamp(1.25rem,4vw,3.5rem)}
+.skip-link{position:absolute;left:-9999px;top:0;background:var(--ink);color:var(--paper);padding:.85rem 1.4rem;z-index:500;font-weight:500}
+.skip-link:focus{left:0}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:.9rem;
+  font-size:.66rem;font-weight:500;letter-spacing:.42em;text-transform:uppercase;color:var(--bronze);
+}
+.eyebrow::before{content:"";width:2.6rem;height:1px;background:var(--bronze)}
+.eyebrow.centered{justify-content:center}
+.eyebrow.centered::after{content:"";width:2.6rem;height:1px;background:var(--bronze)}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;color:var(--ink);line-height:1.06;letter-spacing:-.005em}
+.display-xl{font-size:clamp(2.9rem,8.5vw,6.8rem)}
+.display-lg{font-size:clamp(2.1rem,4.6vw,3.9rem)}
+.serif-i{font-style:italic;font-weight:400;color:var(--bronze)}
+.chapter{padding-block:clamp(4.25rem,9vh,6.5rem)}
+.section-sub{max-width:46ch;margin-top:var(--sp-3);font-size:1.03rem}
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--sp-4);margin-bottom:var(--sp-5);flex-wrap:wrap}
+.cv-auto{content-visibility:auto;contain-intrinsic-size:auto 800px}
+
+.link-line{
+  display:inline-flex;align-items:center;gap:.8rem;min-height:44px;
+  font-size:.72rem;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--ink);
+}
+.link-line .dash{width:2.4rem;height:1px;background:var(--ink);transition:width .35s var(--ease),background .35s var(--ease);display:inline-block}
+.link-line:hover .dash{width:3.6rem;background:var(--bronze)}
+.link-line:hover{color:var(--bronze)}
+
+/* Buttons — pill CTA with the soft aurora glow (your reference, tuned to brand) */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;min-height:48px;
+  padding:.95rem 2.4rem;border:1px solid var(--ink);border-radius:999px;
+  font-size:.72rem;font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:var(--ink);
+  transition:background .35s var(--ease),color .35s var(--ease),border-color .35s var(--ease),transform .35s var(--ease);
+  position:relative;background:var(--paper);
+}
+.btn:hover{background:var(--ink);color:var(--paper);transform:translateY(-1px)}
+.btn-solid{background:var(--ink);color:var(--paper)}
+.btn-solid:hover{background:var(--navy);border-color:var(--navy)}
+.btn-glow::before{
+  content:"";position:absolute;inset:8px 8px -8px;z-index:-1;border-radius:inherit;
+  background:linear-gradient(to right,#E8C98F,#9A7B4F,#3E5A78,#E8C98F);
+  filter:blur(18px);opacity:0;transition:opacity .45s var(--ease);
+}
+@supports (background:linear-gradient(in oklch longer hue to right,oklch(80% 30% 0),oklch(80% 30% 360))){
+  .btn-glow::before{background:linear-gradient(in oklch longer hue to right,oklch(88% 14% 70deg) 0 100%)}
+}
+.btn-glow:hover::before,.btn-glow:focus-visible::before{opacity:.85}
+
+/* Commerce buttons — ALWAYS visible, thumb-sized */
+.buy-row{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-top:.9rem}
+.buy-btn{
+  display:inline-flex;align-items:center;justify-content:center;min-height:44px;
+  padding:.7rem .5rem;font-size:.62rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+  border-radius:999px;transition:background .3s var(--ease),color .3s var(--ease),border-color .3s var(--ease),transform .3s var(--ease);
+  white-space:nowrap;
+}
+.buy-btn:active{transform:scale(.97)}
+.buy-now{background:var(--navy);color:#fff;border:1px solid var(--navy)}
+.buy-now:hover{background:var(--navy-deep);border-color:var(--navy-deep)}
+.add-cart{background:transparent;color:var(--ink);border:1px solid var(--line-strong)}
+.add-cart:hover{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+
+/* reveal targets (invisible only when JS + motion allowed) */
+.motion-on [data-reveal]{opacity:0}
+.line-mask{display:block;overflow:hidden;padding-bottom:.12em;margin-bottom:-.12em}
+.line-mask>span{display:block}
+.motion-on .line-mask>span{transform:translateY(112%)}
+
+/* ═══ HEADER ═══ */
+.site-header{
+  position:fixed;inset:0 0 auto 0;z-index:200;border-bottom:1px solid transparent;
+  transition:background .4s var(--ease),border-color .4s var(--ease);
+  padding-top:env(safe-area-inset-top);
+}
+.site-header.scrolled{background:rgba(251,249,245,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-color:var(--line)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);padding-block:1.05rem}
+.logo{font-weight:600;letter-spacing:.34em;font-size:.95rem;color:var(--ink)}
+.logo span{font-weight:300;color:var(--bronze)}
+.primary-nav ul{display:flex;gap:2.2rem;list-style:none}
+.primary-nav a{
+  font-size:.69rem;font-weight:500;letter-spacing:.26em;text-transform:uppercase;color:var(--ink);
+  padding-block:.55rem;position:relative;display:inline-block;
+}
+.primary-nav a::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:1px;background:var(--bronze);transform:scaleX(0);transform-origin:right;transition:transform .35s var(--ease)}
+.primary-nav a:hover::after,.primary-nav a:focus-visible::after{transform:scaleX(1);transform-origin:left}
+.header-tools{display:flex;align-items:center;gap:.4rem}
+.header-tools svg{width:1.15rem;height:1.15rem}
+.header-tools button,.header-tools a{color:var(--ink);display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:999px}
+.nav-toggle{display:none}
+@media (max-width:920px){
+  .primary-nav{
+    position:fixed;inset:0;background:var(--paper);display:grid;place-items:center;
+    opacity:0;pointer-events:none;transition:opacity .35s var(--ease);z-index:205;
+  }
+  .primary-nav.open{opacity:1;pointer-events:auto}
+  .primary-nav ul{flex-direction:column;text-align:center;gap:1.6rem}
+  .primary-nav a{font-size:1rem}
+  .nav-toggle{display:inline-flex;z-index:210;position:relative}
+}
+
+/* ═══ CHAPTER RAIL (desktop navigation aid) ═══ */
+.rail{position:fixed;right:clamp(.8rem,2vw,2rem);top:50%;transform:translateY(-50%);z-index:150;display:flex;flex-direction:column;gap:1.1rem}
+.rail button{display:flex;align-items:center;gap:.7rem;min-height:24px;font-size:.6rem;font-weight:500;letter-spacing:.28em;text-transform:uppercase;color:var(--faint);transition:color .3s var(--ease)}
+.rail button .tick{width:1.4rem;height:1px;background:var(--line-strong);transition:width .35s var(--ease),background .35s var(--ease)}
+.rail button.active{color:var(--ink)}
+.rail button.active .tick{width:2.4rem;background:var(--bronze)}
+.rail button:hover{color:var(--bronze)}
+@media (max-width:1200px),(pointer:coarse){.rail{display:none}}
+
+/* ═══ 01 HERO ═══ */
+.hero{position:relative;display:flex;align-items:center;padding-top:calc(var(--header-h) + 2.4rem);min-height:100svh}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(2rem,5vw,5rem);align-items:center;width:100%}
+.hero-copy .display-xl{margin-block:var(--sp-3) var(--sp-4)}
+.hero-sub{max-width:38ch;font-size:1.06rem}
+.hero-ctas{display:flex;gap:1rem;flex-wrap:wrap;margin-top:var(--sp-5)}
+.hero-foot{display:flex;gap:2.5rem;margin-top:var(--sp-6);font-size:.63rem;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--faint)}
+.hero-visual{position:relative;height:min(74vh,720px);overflow:hidden;border-radius:var(--radius)}
+.hero-visual img{width:100%;height:118%;object-fit:cover;will-change:transform}
+.hero-visual::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px var(--line)}
+.hero-caption{position:absolute;left:1.3rem;bottom:1.1rem;z-index:2;font-size:.6rem;font-weight:500;letter-spacing:.32em;text-transform:uppercase;color:#fff;mix-blend-mode:difference}
+@media (max-width:920px){
+  .hero{min-height:auto;padding-top:calc(var(--header-h) + 1rem);padding-bottom:var(--sp-6)}
+  .hero-grid{grid-template-columns:1fr;gap:1.6rem}
+  .hero-visual{height:44vh;min-height:300px;order:-1}
+  .hero-foot{flex-direction:column;gap:.6rem;margin-top:var(--sp-5)}
+}
+
+/* ═══ 02 COLLECTIONS ═══ */
+.col-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(1rem,2vw,1.6rem)}
+@media (max-width:920px){.col-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.col-grid{grid-template-columns:1fr}}
+.col-card{position:relative;display:block;overflow:hidden;aspect-ratio:4/3.4;background:var(--mist);border-radius:var(--radius)}
+.col-card img{width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+.col-card:hover img,.col-card:focus-visible img{transform:scale(1.05)}
+.col-card .veil{position:absolute;inset:0;background:linear-gradient(to top,rgba(19,18,17,.55),rgba(19,18,17,.02) 55%);transition:background .4s var(--ease)}
+.col-card .col-label{position:absolute;left:1.3rem;right:1.3rem;bottom:1.15rem;color:#fff}
+.col-card .col-label strong{font-family:var(--font-display);font-weight:500;font-size:clamp(1.35rem,2vw,1.7rem);display:block;line-height:1.15}
+.col-card .col-label small{font-size:.6rem;font-weight:500;letter-spacing:.28em;text-transform:uppercase;opacity:.85}
+.col-card .col-cta{
+  position:absolute;right:1.15rem;bottom:1.15rem;color:#fff;width:44px;height:44px;border-radius:999px;
+  display:grid;place-items:center;border:1px solid rgba(255,255,255,.55);
+  transition:background .35s var(--ease),transform .35s var(--ease);
+}
+.col-card:hover .col-cta{background:#fff;color:var(--ink);transform:translateX(2px)}
+
+/* ═══ 03 CURATED EDIT ═══ */
+.edit-layout{display:grid;grid-template-columns:15rem 1fr;gap:clamp(1.6rem,3.5vw,3.6rem);align-items:start}
+@media (max-width:1080px){.edit-layout{grid-template-columns:1fr}}
+.filter-rail{position:sticky;top:calc(var(--header-h) + 1.4rem)}
+.filter-rail h3{font-size:1.35rem;margin-bottom:.3rem}
+.filter-rail p{font-size:.62rem;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--faint)}
+.filter-list{display:flex;flex-direction:column;gap:.15rem;margin-top:1.4rem;border-left:1px solid var(--line)}
+.filter-list a{
+  display:flex;align-items:center;min-height:44px;padding:.35rem 1rem;margin-left:-1px;border-left:2px solid transparent;
+  font-size:.68rem;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--stone);
+  transition:color .3s var(--ease),border-color .3s var(--ease),transform .3s var(--ease);
+}
+.filter-list a:hover{color:var(--ink)}
+.filter-list a[aria-current="true"]{color:var(--navy);border-color:var(--bronze);font-weight:600}
+@media (max-width:1080px){
+  .filter-rail{position:static}
+  .filter-list{flex-direction:row;flex-wrap:wrap;border-left:0;gap:.5rem}
+  .filter-list a{border:1px solid var(--line-strong);border-radius:999px;padding:.35rem 1.1rem;margin-left:0}
+  .filter-list a[aria-current="true"]{border-color:var(--navy);background:var(--navy);color:#fff}
+}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:clamp(1.2rem,2.4vw,1.8rem) clamp(1rem,2vw,1.5rem)}
+@media (max-width:560px){.product-grid{grid-template-columns:1fr 1fr;gap:1.3rem .8rem}}
+@media (max-width:380px){.product-grid{grid-template-columns:1fr}}
+.p-card{display:flex;flex-direction:column}
+.p-media{position:relative;aspect-ratio:4/5;overflow:hidden;background:var(--mist);border-radius:var(--radius)}
+.p-media img{width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+.p-card:hover .p-media img{transform:scale(1.05)}
+.p-tag{
+  position:absolute;top:.85rem;left:.85rem;z-index:2;background:var(--paper);color:var(--bronze-deep);
+  padding:.3rem .75rem;font-size:.56rem;font-weight:600;letter-spacing:.24em;text-transform:uppercase;border-radius:999px;
+}
+.p-body{padding-top:.95rem}
+.p-name{font-family:var(--font-display);font-weight:500;font-size:1.2rem;color:var(--ink);line-height:1.2}
+.p-name a:hover{color:var(--bronze)}
+.p-meta{font-size:.6rem;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);margin-top:.3rem}
+.p-price{font-size:.85rem;font-weight:600;letter-spacing:.1em;color:var(--navy);margin-top:.35rem}
+.p-price s{color:var(--faint);font-weight:400;margin-left:.5rem}
+@media (max-width:560px){
+  .buy-row{grid-template-columns:1fr}
+  .p-name{font-size:1.05rem}
+}
+.edit-more{margin-top:var(--sp-6);text-align:center}
+
+/* ═══ 04 THE SIGNATURES — VIDEO COVERING GALLERY ═══
+   Your prepared design, adapted: three infinite drifting columns of
+   VIDEO tiles at FULL opacity. No white radial wash — the heading sits
+   on a compact frosted card so the clips stay clearly visible. */
+.sig{position:relative;height:100vh;min-height:640px;overflow:hidden;background:var(--ink);padding-block:0}
+.sig-cols{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(.8rem,1.4vw,1.4rem);padding-inline:clamp(.8rem,1.4vw,1.4rem)}
+@media (max-width:820px){.sig-cols{grid-template-columns:repeat(2,1fr)}.sig-col:nth-child(3){display:none}}
+.sig-col{position:relative;overflow:visible}
+.sig-track{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;gap:clamp(.8rem,1.4vw,1.4rem);will-change:transform}
+.sig-tile{position:relative;flex:none;display:block;aspect-ratio:3/4;overflow:hidden;border-radius:var(--radius);background:#101110}
+.sig-tile video,.sig-tile img{width:100%;height:100%;object-fit:cover}
+.sig-tile .tile-info{
+  position:absolute;left:1rem;right:1rem;bottom:.9rem;z-index:3;color:#fff;pointer-events:none;
+  text-shadow:0 1px 14px rgba(0,0,0,.55);
+}
+.sig-tile .tile-info strong{font-family:var(--font-display);font-weight:500;font-size:1.2rem;display:block;line-height:1.15}
+.sig-tile .tile-info span{font-size:.6rem;font-weight:500;letter-spacing:.26em;text-transform:uppercase;opacity:.9}
+.sig-tile::after{content:"";position:absolute;inset:auto 0 0 0;height:38%;background:linear-gradient(to top,rgba(0,0,0,.55),transparent);pointer-events:none}
+.sig-tile .sig-shop{
+  position:absolute;top:.85rem;right:.85rem;z-index:4;min-height:44px;min-width:44px;
+  display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1.05rem;border-radius:999px;
+  background:rgba(251,249,245,.92);color:var(--ink);font-size:.58rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+  transition:background .3s var(--ease),color .3s var(--ease);
+}
+.sig-tile .sig-shop:hover{background:var(--navy);color:#fff}
+/* compact frosted title card — replaces the old full-screen white wash */
+.sig-overlay{position:absolute;inset:0;z-index:5;display:flex;justify-content:center;align-items:center;text-align:center;pointer-events:none;padding-inline:1.25rem}
+.sig-panel{
+  pointer-events:auto;background:rgba(16,17,16,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.14);border-radius:6px;
+  padding:clamp(1.6rem,4vw,2.8rem) clamp(1.8rem,5vw,3.6rem);max-width:34rem;
+}
+.sig-panel .eyebrow{color:#E8C98F}
+.sig-panel .eyebrow::before,.sig-panel .eyebrow.centered::after{background:#E8C98F}
+.sig-panel h2{color:#fff;margin-top:var(--sp-2)}
+.sig-panel .serif-i{color:#E8C98F}
+.sig-panel .section-sub{color:rgba(255,255,255,.78);margin-inline:auto;font-size:.95rem}
+.sig-panel .link-line{margin-top:var(--sp-4);color:#fff}
+.sig-panel .link-line .dash{background:#fff}
+.sig-panel .link-line:hover{color:#E8C98F}
+.sig-panel .link-line:hover .dash{background:#E8C98F}
+.motion-off .sig{height:auto;min-height:0}
+.motion-off .sig-cols{position:relative;inset:auto;padding-block:5rem 2rem}
+.motion-off .sig-track{position:relative}
+.motion-off .sig-overlay{position:relative;inset:auto;padding-block:2rem}
+
+/* ═══ 05 ALL PRODUCTS — THE WHEEL ═══ */
+.wheel-section{position:relative;height:100vh;min-height:640px;overflow:hidden;padding-block:0;background:var(--mist)}
+.wheel-head{position:absolute;top:clamp(4.5rem,9vh,7rem);left:0;right:0;text-align:center;z-index:6;pointer-events:none}
+.wheel-stage{position:absolute;inset:0;cursor:grab;touch-action:pan-y}
+.wheel-stage.dragging{cursor:grabbing}
+.wheel-card{
+  position:absolute;left:0;top:0;width:clamp(150px,16vw,240px);aspect-ratio:3/4;
+  will-change:transform;background:var(--card);overflow:hidden;
+  box-shadow:0 1px 0 var(--line),0 18px 40px -22px rgba(19,18,17,.28);
+  border:6px solid var(--card);
+}
+.wheel-card img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.wheel-card.is-front{z-index:3}
+.wheel-caption{position:absolute;left:0;right:0;top:38%;transform:translateY(-50%);text-align:center;z-index:5;pointer-events:none}
+.wheel-caption .w-brand{font-size:.63rem;font-weight:500;letter-spacing:.34em;text-transform:uppercase;color:var(--faint)}
+.wheel-caption .w-name{font-family:var(--font-display);font-size:clamp(2.2rem,4.6vw,4rem);font-weight:500;color:var(--ink);line-height:1.05;margin-top:.4rem}
+.wheel-caption .w-price{font-size:.82rem;font-weight:600;letter-spacing:.2em;color:var(--bronze);margin-top:.7rem}
+.wheel-buy{position:absolute;left:0;right:0;bottom:clamp(4rem,10vh,6.4rem);display:flex;justify-content:center;gap:.7rem;z-index:6}
+.wheel-buy .buy-btn{padding-inline:1.6rem}
+.wheel-hint{position:absolute;bottom:clamp(1.2rem,3.5vh,2.4rem);left:0;right:0;text-align:center;z-index:6;font-size:.6rem;font-weight:500;letter-spacing:.34em;text-transform:uppercase;color:var(--faint);pointer-events:none;padding-inline:1.5rem}
+@media (max-width:920px){
+  .wheel-section{height:82vh;min-height:560px}
+  .wheel-head{top:clamp(3rem,7vh,4.5rem)}
+  .wheel-card{width:clamp(118px,36vw,170px);border-width:4px}
+  .wheel-caption{top:35%}
+  .wheel-caption .w-name{font-size:clamp(1.7rem,8vw,2.6rem)}
+}
+.motion-off .wheel-section{height:auto;min-height:0;padding-block:5rem}
+.motion-off .wheel-head{position:static;margin-bottom:2rem}
+.motion-off .wheel-stage{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem;padding-inline:1.25rem;height:auto}
+.motion-off .wheel-card{position:relative;transform:none!important;width:auto}
+.motion-off .wheel-caption,.motion-off .wheel-hint{display:none}
+.motion-off .wheel-buy{position:static;margin-top:2rem}
+
+/* ═══ 06 SCENT BY VIBE (bento) ═══ */
+.vibe-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:clamp(.8rem,1.4vw,1.2rem);grid-auto-rows:minmax(240px,32vh)}
+.vibe-tile{position:relative;overflow:hidden;border-radius:var(--radius);background:var(--mist);display:block}
+.vibe-tile img{width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+.vibe-tile:hover img,.vibe-tile:focus-visible img{transform:scale(1.05)}
+.vibe-tile .veil{position:absolute;inset:0;background:linear-gradient(to top,rgba(19,18,17,.5),rgba(19,18,17,0) 55%)}
+.vibe-tile .vibe-label{position:absolute;left:1.3rem;bottom:1.15rem;color:#fff}
+.vibe-tile .vibe-label strong{font-family:var(--font-display);font-weight:500;font-size:clamp(1.25rem,1.8vw,1.6rem);display:block;line-height:1.2}
+.vibe-tile .vibe-label small{font-size:.6rem;font-weight:500;letter-spacing:.28em;text-transform:uppercase;opacity:.85}
+.vt-a{grid-column:span 8}.vt-b{grid-column:span 4;grid-row:span 2}.vt-c{grid-column:span 4}.vt-d{grid-column:span 4}
+@media (max-width:820px){
+  .vibe-grid{grid-template-columns:1fr 1fr;grid-auto-rows:minmax(200px,30vh)}
+  .vt-a{grid-column:span 2}.vt-b{grid-column:span 1;grid-row:span 1}.vt-c,.vt-d{grid-column:span 1}
+}
+
+/* ═══ 07 TESTIMONIALS ═══ */
+.quote-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(1.4rem,3vw,3rem);margin-top:var(--sp-5)}
+@media (max-width:920px){.quote-strip{grid-template-columns:1fr}}
+.quote{border-left:1px solid var(--line-strong);padding-left:1.4rem}
+.quote blockquote{font-family:var(--font-display);font-style:italic;font-size:1.25rem;color:var(--ink);line-height:1.45}
+.quote footer{margin-top:.9rem;font-size:.63rem;font-weight:500;letter-spacing:.26em;text-transform:uppercase;color:var(--faint)}
+
+/* ═══ 08 NEWSLETTER ═══ */
+.newsletter{background:var(--ink);color:#B9B4AC;text-align:center}
+.newsletter .eyebrow{color:#E8C98F}
+.newsletter .eyebrow::before,.newsletter .eyebrow.centered::after{background:#E8C98F}
+.newsletter h2{color:var(--paper);margin-top:var(--sp-3)}
+.newsletter .serif-i{color:#E8C98F}
+.newsletter .section-sub{margin-inline:auto;color:#B9B4AC}
+.newsletter-form{display:flex;max-width:30rem;margin:var(--sp-5) auto 0;border-bottom:1px solid rgba(255,255,255,.35)}
+.newsletter-form input{flex:1;min-width:0;background:none;border:0;color:var(--paper);padding:1rem .2rem;font:inherit;letter-spacing:.05em}
+.newsletter-form input::placeholder{color:#8C8880}
+.newsletter-form input:focus{outline:none}
+.newsletter-form button{color:var(--paper);font-size:.66rem;font-weight:600;letter-spacing:.3em;text-transform:uppercase;padding-inline:1rem;min-height:48px;transition:color .3s var(--ease)}
+.newsletter-form button:hover{color:#E8C98F}
+.newsletter-hint{margin-top:1.2rem;font-size:.69rem;color:#8C8880}
+
+/* ═══ FOOTER ═══ */
+.site-footer{background:var(--ink);color:#8C8880;padding-block:var(--sp-6) var(--sp-4);border-top:1px solid rgba(255,255,255,.08)}
+.footer-grid{display:grid;grid-template-columns:1.6fr repeat(3,1fr);gap:var(--sp-5)}
+@media (max-width:1000px){.footer-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.footer-grid{grid-template-columns:1fr}}
+.footer-brand .logo{color:var(--paper)}
+.footer-brand p{margin-top:1.2rem;font-size:.88rem;max-width:30ch}
+.footer-col h3{font-family:var(--font-body);font-size:.63rem;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:#B9B4AC;margin-bottom:1.1rem}
+.footer-col ul{list-style:none;display:grid;gap:.35rem}
+.footer-col a{font-size:.88rem;transition:color .25s;display:inline-flex;min-height:34px;align-items:center}
+.footer-col a:hover{color:var(--paper)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-3);flex-wrap:wrap;margin-top:var(--sp-6);padding-top:var(--sp-4);border-top:1px solid rgba(255,255,255,.08);font-size:.75rem}
+.footer-bottom nav{display:flex;gap:1.6rem}
+.footer-bottom a:hover{color:var(--paper)}
+.payments{display:flex;gap:.9rem;font-size:.6rem;font-weight:600;letter-spacing:.14em;color:#6E6A63}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- ══ HEADER ══ -->
+<header class="site-header" id="site-header">
+  <div class="container header-inner">
+    <a class="logo" href="/">STAR<span>SCENTS</span></a>
+    <nav class="primary-nav" id="primary-nav" aria-label="Primary">
+      <ul>
+        <li><a href="#curated">Bestsellers</a></li>
+        <li><a href="#collections">For Him</a></li>
+        <li><a href="#collections">For Her</a></li>
+        <li><a href="#collections">Oud</a></li>
+        <li><a href="#signatures">Films</a></li>
+      </ul>
+    </nav>
+    <div class="header-tools">
+      <a href="/search" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></a>
+      <a href="/cart" aria-label="Cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 8h18M3 16h18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ══ CHAPTER RAIL ══ -->
+<nav class="rail" id="rail" aria-label="Page chapters"></nav>
+
+<main id="main">
+
+<!-- ══ 01 HERO ══ -->
+<section class="hero chapter" data-chapter="Maison" aria-labelledby="hero-title">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow" data-reveal>Dubai's House of Fragrance</p>
+      <h1 class="display-xl" id="hero-title">
+        <span class="line-mask"><span>Worn Like</span></span>
+        <span class="line-mask"><span>a <em class="serif-i">Signature.</em></span></span>
+      </h1>
+      <p class="hero-sub" data-reveal>Rare Middle Eastern houses and the world's finest designer names — curated in Dubai, delivered duty-paid.</p>
+      <div class="hero-ctas" data-reveal>
+        <a class="btn btn-solid btn-glow" href="#curated">Shop Bestsellers</a>
+        <a class="btn" href="#signatures">Watch the Films</a>
+      </div>
+      <div class="hero-foot" data-reveal>
+        <p>Est. Dubai</p><p>London · Melbourne · Kuala Lumpur</p>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=1400&q=80" alt="Gold-toned eau de parfum bottle in soft daylight" fetchpriority="high" data-hero-img>
+      <p class="hero-caption">Khamrah · Batch 24-311 · Verified</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 02 SHOP BY COLLECTION ══ -->
+<section class="chapter cv-auto" id="collections" data-chapter="Collections" aria-labelledby="collections-title">
+  <div class="container">
+    <div class="section-head">
+      <div data-reveal>
+        <p class="eyebrow">The Edit</p>
+        <h2 class="display-lg" id="collections-title">Shop by <em class="serif-i">Collection</em></h2>
+      </div>
+      <a class="link-line" href="/collections" data-reveal><span class="dash" aria-hidden="true"></span>All Collections</a>
+    </div>
+    <div class="col-grid" data-stagger>
+      <a class="col-card" href="/collections/oud">
+        <img src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?auto=format&fit=crop&w=900&q=80" alt="Dark amber oud bottle against warm light" loading="lazy">
+        <span class="veil" aria-hidden="true"></span>
+        <span class="col-label"><strong>The Oud Collection</strong><small>27 scents</small></span>
+        <span class="col-cta" aria-hidden="true">→</span>
+      </a>
+      <a class="col-card" href="/collections/for-her">
+        <img src="https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=900&q=80" alt="Blush pink floral fragrance bottle on satin" loading="lazy">
+        <span class="veil" aria-hidden="true"></span>
+        <span class="col-label"><strong>Floral Essences</strong><small>38 scents</small></span>
+        <span class="col-cta" aria-hidden="true">→</span>
+      </a>
+      <a class="col-card" href="/collections/for-him">
+        <img src="https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=900&q=80" alt="Cool blue aquatic cologne bottle in daylight" loading="lazy">
+        <span class="veil" aria-hidden="true"></span>
+        <span class="col-label"><strong>Fresh &amp; Aquatic</strong><small>42 scents</small></span>
+        <span class="col-cta" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 03 CURATED EDIT — Buy Now / Add to Cart always visible ══ -->
+<section class="chapter cv-auto" id="curated" data-chapter="Curated Edit" aria-labelledby="curated-title">
+  <div class="container">
+    <div class="section-head">
+      <div data-reveal>
+        <p class="eyebrow">Bestsellers</p>
+        <h2 class="display-lg" id="curated-title">The Curated <em class="serif-i">Edit</em></h2>
+      </div>
+      <p class="eyebrow" style="color:var(--faint)" data-reveal>Showing 8 of 138</p>
+    </div>
+    <div class="edit-layout">
+      <aside class="filter-rail" data-reveal aria-label="Filter fragrances">
+        <h3>Filter By</h3>
+        <p>Refine the journey</p>
+        <nav class="filter-list">
+          <a href="#curated" aria-current="true">All Fragrances</a>
+          <a href="#curated">Floral &amp; Sweet</a>
+          <a href="#curated">Woody &amp; Earthy</a>
+          <a href="#curated">Fresh &amp; Citrus</a>
+          <a href="#curated">Oriental</a>
+        </nav>
+      </aside>
+      <div>
+        <div class="product-grid" id="product-grid" data-stagger><!-- built by JS from PRODUCTS --></div>
+        <div class="edit-more" data-reveal>
+          <a class="btn" href="/collections/all">View All Products</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 04 THE SIGNATURES — VIDEO GALLERY (your design, videos fully visible) ══ -->
+<section class="sig chapter" id="signatures" data-chapter="Signatures" aria-labelledby="sig-title">
+  <div class="sig-cols" id="sig-cols"><!-- built by JS from FILMS --></div>
+  <div class="sig-overlay">
+    <div class="sig-panel">
+      <p class="eyebrow centered" data-reveal>From Seal to Scent</p>
+      <h2 class="display-lg" id="sig-title">The <em class="serif-i">Signatures</em></h2>
+      <p class="section-sub" data-reveal>Every bottle on film — hover to pause the shelf, tap a clip to shop it.</p>
+      <a class="link-line" href="/collections/bestsellers" data-reveal><span class="dash" aria-hidden="true"></span>View All</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 05 ALL PRODUCTS — THE WHEEL ══ -->
+<section class="wheel-section chapter" id="all-products" data-chapter="All Products" aria-labelledby="wheel-title">
+  <div class="wheel-head">
+    <p class="eyebrow centered" data-reveal>Every Bottle</p>
+    <h2 class="display-lg" id="wheel-title" style="margin-top:var(--sp-2)">All <em class="serif-i">Products</em></h2>
+  </div>
+  <div class="wheel-caption" aria-live="polite">
+    <p class="w-brand" id="wheel-brand">Lattafa</p>
+    <p class="w-name" id="wheel-name">Khamrah</p>
+    <p class="w-price" id="wheel-price">£34.00</p>
+  </div>
+  <div class="wheel-stage" id="wheel-stage" aria-label="Product wheel — drag to spin"></div>
+  <div class="wheel-buy">
+    <a class="buy-btn buy-now" id="wheel-buy-now" href="/products/khamrah">Buy Now</a>
+    <button class="buy-btn add-cart" id="wheel-add-cart" type="button" data-handle="khamrah">Add to Cart</button>
+  </div>
+  <p class="wheel-hint">Drag to spin — the front bottle is named above</p>
+</section>
+
+<!-- ══ 06 SCENT BY VIBE ══ -->
+<section class="chapter cv-auto" id="vibes" data-chapter="Vibes" aria-labelledby="vibe-title">
+  <div class="container">
+    <div class="section-head">
+      <div data-reveal>
+        <p class="eyebrow">Discover</p>
+        <h2 class="display-lg" id="vibe-title">Scent by <em class="serif-i">Vibe</em></h2>
+      </div>
+    </div>
+    <div class="vibe-grid" data-stagger>
+      <a class="vibe-tile vt-a" href="/collections/evening">
+        <img src="https://images.unsplash.com/photo-1557170334-a9632e77c6e4?auto=format&fit=crop&w=1400&q=80" alt="Crimson rose petals beside a dark glass bottle" loading="lazy">
+        <span class="veil" aria-hidden="true"></span>
+        <span class="vibe-label"><strong>The Intimate Evening</strong><small>Shop the edit</small></span>
+      </a>
+      <a class="vibe-tile vt-b" href="/collections/summer">
+        <img src="https://images.unsplash.com/photo-1587017539504-67cfbddac569?auto=format&fit=crop&w=900&q=80" alt="Amber bottle catching Mediterranean sunlight" loading="lazy">
+        <span class="veil" aria-hidden="true"></span>
+        <span class="vibe-label"><strong>Mediterranean Sun</strong><small>Shop the edit</small></span>
+      </a>
+      <a class="vibe-tile vt-c" href="/collections/heritage">
+        <img src="https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=900&q=80" alt="Aged leather and brass beside a heritage flacon" loading="lazy">
+        <span class="veil" aria-hidden="true"></span>
+        <span class="vibe-label"><strong>Heritage &amp; Leather</strong><small>Shop the edit</small></span>
+      </a>
+      <a class="vibe-tile vt-d" href="/collections/clean">
+        <img src="https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&w=900&q=80" alt="White linen and a clear minimal bottle in soft light" loading="lazy">
+        <span class="veil" aria-hidden="true"></span>
+        <span class="vibe-label"><strong>Clean &amp; Minimal</strong><small>Shop the edit</small></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 07 TESTIMONIALS ══ -->
+<section class="chapter cv-auto" id="testimonials" data-chapter="Promise" aria-labelledby="quotes-title">
+  <div class="container">
+    <div data-reveal>
+      <p class="eyebrow">Client Testimonials</p>
+      <h2 class="display-lg" id="quotes-title">What They <em class="serif-i">Say</em></h2>
+    </div>
+    <div class="quote-strip" data-stagger>
+      <article class="quote">
+        <blockquote>An absolute revelation in perfumery. The depth and sillage of Amber Oud are unmatched.</blockquote>
+        <footer>Alexander Vance — Bespoke Client</footer>
+      </article>
+      <article class="quote">
+        <blockquote>Five days to London, beautifully packed. The batch code checked out.</blockquote>
+        <footer>Sarah M. — London</footer>
+      </article>
+      <article class="quote">
+        <blockquote>Found my signature on the second sample. Full bottle within the week.</blockquote>
+        <footer>Aisyah K. — Kuala Lumpur</footer>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 08 NEWSLETTER ══ -->
+<section class="newsletter chapter" id="circle" data-chapter="Circle" aria-labelledby="newsletter-title">
+  <div class="container" data-reveal>
+    <p class="eyebrow centered">The Circle</p>
+    <h2 class="display-lg" id="newsletter-title">Join the <em class="serif-i">Circle</em></h2>
+    <p class="section-sub">Early access, fragrance guides, 10% off your first order.</p>
+    <form class="newsletter-form" action="/contact#newsletter" method="post">
+      <label for="newsletter-email" class="skip-link">Email address</label>
+      <input id="newsletter-email" type="email" name="contact[email]" placeholder="Your email address" autocomplete="email" required>
+      <button type="submit">Subscribe</button>
+    </form>
+    <p class="newsletter-hint">One considered email a week. Unsubscribe anytime.</p>
+  </div>
+</section>
+
+</main>
+
+<!-- ══ FOOTER ══ -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="logo" href="/">STAR<span>SCENTS</span></a>
+        <p>Rare Middle Eastern houses and designer names, curated in Dubai.</p>
+      </div>
+      <nav class="footer-col" aria-label="Shop">
+        <h3>Shop</h3>
+        <ul>
+          <li><a href="/collections/for-him">For Him</a></li>
+          <li><a href="/collections/for-her">For Her</a></li>
+          <li><a href="/collections/oud">Oud</a></li>
+          <li><a href="/collections/samples">Sample Sets</a></li>
+        </ul>
+      </nav>
+      <nav class="footer-col" aria-label="Company">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="/pages/our-story">Our Story</a></li>
+          <li><a href="/blogs/journal">Journal</a></li>
+          <li><a href="/pages/contact">Contact</a></li>
+        </ul>
+      </nav>
+      <nav class="footer-col" aria-label="Support">
+        <h3>Support</h3>
+        <ul>
+          <li><a href="/pages/track-order">Track Order</a></li>
+          <li><a href="/pages/shipping">Shipping</a></li>
+          <li><a href="/pages/returns">Returns</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 StarScents. All rights reserved.</p>
+      <nav aria-label="Legal">
+        <a href="/policies/privacy-policy">Privacy</a>
+        <a href="/policies/terms-of-service">Terms</a>
+      </nav>
+      <div class="payments" aria-label="Accepted payment methods">
+        <span>VISA</span><span>MASTERCARD</span><span>SHOP PAY</span><span>APPLE PAY</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+'use strict';
+var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var header = document.getElementById('site-header');
+var motionOn = !reduced && typeof gsap !== 'undefined';
+document.body.classList.add(motionOn ? 'motion-on' : 'motion-off');
+
+/* ─────────────────────────────────────────────
+   DATA (Shopify: replaced by liquid loops)
+───────────────────────────────────────────── */
+var U = function(id,w){return 'https://images.unsplash.com/'+id+'?auto=format&fit=crop&w='+(w||800)+'&q=80';};
+var PRODUCTS = [
+  {brand:'Lattafa', name:'Khamrah', price:'£34.00', tag:'Bestseller', family:'Oriental', handle:'khamrah', img:U('photo-1585386959984-a4155224a1ad')},
+  {brand:'Rasasi', name:'Hawas for Her', price:'£45.00', was:'£52.00', tag:'Sale', family:'Floral & Sweet', handle:'hawas-for-her', img:U('photo-1541643600914-78b084683601')},
+  {brand:'Afnan', name:'9pm Extrait', price:'£38.00', tag:'New', family:'Oriental', handle:'9pm-extrait', img:U('photo-1523293182086-7651a899d37f')},
+  {brand:'Armaf', name:'Club de Nuit', price:'£29.00', tag:'', family:'Fresh & Citrus', handle:'club-de-nuit', img:U('photo-1547887537-6158d64c35b3')},
+  {brand:'Swiss Arabian', name:'Shaghaf Oud', price:'£42.00', tag:'', family:'Woody & Earthy', handle:'shaghaf-oud', img:U('photo-1557170334-a9632e77c6e4')},
+  {brand:'Al Haramain', name:'Amber Oud', price:'£56.00', tag:'Rare', family:'Oriental', handle:'amber-oud', img:U('photo-1587017539504-67cfbddac569')},
+  {brand:'Ajmal', name:'Wisal Dhahab', price:'£31.00', tag:'', family:'Floral & Sweet', handle:'wisal-dhahab', img:U('photo-1588405748880-12d1d2a59f75')},
+  {brand:'Amouage', name:'Reflection Man', price:'£240.00', tag:'Icon', family:'Fresh & Citrus', handle:'reflection-man', img:U('photo-1594035910387-fea47794261f')}
+];
+
+/* REPLACE-VIDEO: swap each `src` for your real product clip (mp4/webm, ~6-10s,
+   muted-safe). Posters already show the bottles so the layout never looks broken. */
+var FILMS = [
+  {name:'Khamrah',        brand:'Lattafa',       handle:'khamrah',        poster:U('photo-1585386959984-a4155224a1ad'), src:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'},
+  {name:'Hawas for Her',  brand:'Rasasi',        handle:'hawas-for-her',  poster:U('photo-1541643600914-78b084683601'), src:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4'},
+  {name:'9pm Extrait',    brand:'Afnan',         handle:'9pm-extrait',    poster:U('photo-1523293182086-7651a899d37f'), src:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'},
+  {name:'Club de Nuit',   brand:'Armaf',         handle:'club-de-nuit',   poster:U('photo-1547887537-6158d64c35b3'), src:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'},
+  {name:'Shaghaf Oud',    brand:'Swiss Arabian', handle:'shaghaf-oud',    poster:U('photo-1557170334-a9632e77c6e4'), src:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'},
+  {name:'Amber Oud',      brand:'Al Haramain',   handle:'amber-oud',      poster:U('photo-1587017539504-67cfbddac569'), src:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}
+];
+
+/* ─── product grid (Buy Now + Add to Cart always visible) ─── */
+var grid = document.getElementById('product-grid');
+grid.innerHTML = PRODUCTS.map(function(p){
+  return '<article class="p-card">'+
+    '<a class="p-media" href="/products/'+p.handle+'" aria-label="'+p.name+' by '+p.brand+'">'+
+      (p.tag?'<span class="p-tag">'+p.tag+'</span>':'')+
+      '<img src="'+p.img+'" alt="'+p.name+' by '+p.brand+'" loading="lazy" width="800" height="1000">'+
+    '</a>'+
+    '<div class="p-body">'+
+      '<h3 class="p-name"><a href="/products/'+p.handle+'">'+p.name+'</a></h3>'+
+      '<p class="p-meta">'+p.brand+' · '+p.family+'</p>'+
+      '<p class="p-price">'+p.price+(p.was?'<s>'+p.was+'</s>':'')+'</p>'+
+      '<div class="buy-row">'+
+        '<a class="buy-btn buy-now" href="/products/'+p.handle+'">Buy Now</a>'+
+        '<button class="buy-btn add-cart" type="button" data-handle="'+p.handle+'">Add to Cart</button>'+
+      '</div>'+
+    '</div>'+
+  '</article>';
+}).join('');
+
+/* demo add-to-cart feedback (Shopify build posts to /cart/add.js) */
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.add-cart');if(!b)return;
+  var t=b.textContent;b.textContent='Added ✓';b.disabled=true;
+  setTimeout(function(){b.textContent=t;b.disabled=false;},1400);
+});
+
+/* ─── signatures video columns ─── */
+var sigCols=document.getElementById('sig-cols');
+var SIG_ORDERS=[[0,3,1,4],[2,5,0,3],[4,1,5,2]];
+function sigTile(f){
+  return '<div class="sig-tile">'+
+    '<video muted loop playsinline preload="none" poster="'+f.poster+'" data-src="'+f.src+'" aria-label="'+f.name+' product film"></video>'+
+    '<a class="sig-shop" href="/products/'+f.handle+'">Shop</a>'+
+    '<span class="tile-info"><strong>'+f.name+'</strong><span>'+f.brand+'</span></span>'+
+  '</div>';
+}
+SIG_ORDERS.forEach(function(order){
+  var col=document.createElement('div');col.className='sig-col';
+  var track=document.createElement('div');track.className='sig-track';
+  var html=order.map(function(i){return sigTile(FILMS[i]);}).join('');
+  /* duplicate only when animating → seamless wrap at half height;
+     static fallback shows a single clean set */
+  track.innerHTML=motionOn?html+html:html;
+  col.appendChild(track);sigCols.appendChild(col);
+});
+
+/* lazy-load + play videos only while the section is on screen */
+var sigSection=document.querySelector('.sig');
+var sigVideos=Array.prototype.slice.call(sigSection.querySelectorAll('video'));
+var sigLoaded=false;
+function loadSigVideos(){
+  if(sigLoaded)return;sigLoaded=true;
+  sigVideos.forEach(function(v){v.src=v.getAttribute('data-src');v.load();});
+}
+function playSig(on){
+  sigVideos.forEach(function(v){
+    if(on&&!reduced){var p=v.play();if(p&&p.catch)p.catch(function(){});}
+    else v.pause();
+  });
+}
+if('IntersectionObserver' in window){
+  var sigIO=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){loadSigVideos();playSig(true);}else{playSig(false);}
+    });
+  },{rootMargin:'200px 0px'});
+  sigIO.observe(sigSection);
+}else{loadSigVideos();playSig(true);}
+
+/* ─── wheel cards ─── */
+var wheelStage=document.getElementById('wheel-stage');
+var WHEEL_SLOTS=28;
+for(var wi=0;wi<WHEEL_SLOTS;wi++){
+  var wp=PRODUCTS[wi%PRODUCTS.length];
+  var wc=document.createElement('a');
+  wc.className='wheel-card';
+  wc.href='/products/'+wp.handle;
+  wc.setAttribute('aria-label',wp.name+' — '+wp.price);
+  wc.innerHTML='<img src="'+wp.img+'" alt="" loading="lazy" draggable="false">';
+  wheelStage.appendChild(wc);
+}
+var wheelBuyNow=document.getElementById('wheel-buy-now');
+var wheelAddCart=document.getElementById('wheel-add-cart');
+
+/* ─── header state ─── */
+function onScroll(){header.classList.toggle('scrolled',window.scrollY>40);}
+window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+/* ─── mobile nav ─── */
+var toggle=document.querySelector('.nav-toggle'),nav=document.getElementById('primary-nav');
+toggle.addEventListener('click',function(){
+  var open=nav.classList.toggle('open');
+  toggle.setAttribute('aria-expanded',open);
+  toggle.setAttribute('aria-label',open?'Close menu':'Open menu');
+  document.body.style.overflow=open?'hidden':'';
+});
+nav.addEventListener('click',function(e){
+  if(e.target.closest('a')){nav.classList.remove('open');toggle.setAttribute('aria-expanded','false');document.body.style.overflow='';}
+});
+
+/* ─── chapter rail ─── */
+var chapters=Array.prototype.slice.call(document.querySelectorAll('[data-chapter]'));
+var rail=document.getElementById('rail');
+chapters.forEach(function(sec,idx){
+  var b=document.createElement('button');b.type='button';
+  b.innerHTML='<span class="tick" aria-hidden="true"></span>'+String(idx+1).padStart(2,'0')+' '+sec.getAttribute('data-chapter');
+  b.addEventListener('click',function(){sec.scrollIntoView({behavior:reduced?'auto':'smooth'});});
+  rail.appendChild(b);
+});
+var railBtns=rail.querySelectorAll('button');
+function setActiveChapter(i){railBtns.forEach(function(b,j){b.classList.toggle('active',j===i);});}
+setActiveChapter(0);
+
+/* ═════════ MOTION (GSAP) ═════════ */
+if(!motionOn){
+  /* static fallback: everything visible, videos poster-only until in view */
+  return;
+}
+gsap.registerPlugin(ScrollTrigger);
+function lerp(a,b,t){return a+(b-a)*t;}
+
+/* ── hero load choreography (line-mask text reveal) ── */
+var tl=gsap.timeline({defaults:{ease:'expo.out'}});
+tl.from('[data-hero-img]',{scale:1.12,duration:2.2,ease:'power2.out'},0)
+  .to('.hero .line-mask > span',{y:0,duration:1.05,stagger:.13},.25)
+  .to('.hero .eyebrow',{opacity:1,duration:.7},.4)
+  .to('.hero-sub',{opacity:1,y:0,duration:.85,startAt:{y:16}},.75)
+  .to('.hero-ctas',{opacity:1,y:0,duration:.85,startAt:{y:16}},.95)
+  .to('.hero-foot',{opacity:1,duration:.9},1.2);
+
+/* ── scroll reveals (subtle: y 14px, power1.out, no re-trigger churn) ── */
+gsap.utils.toArray('[data-reveal]:not(.hero [data-reveal])').forEach(function(el){
+  gsap.fromTo(el,{opacity:0,y:14},{opacity:1,y:0,duration:.6,ease:'power1.out',
+    scrollTrigger:{trigger:el,start:'top 90%',toggleActions:'play none none none'}});
+});
+
+/* ── staggered groups (cards, tiles, quotes) ── */
+gsap.utils.toArray('[data-stagger]').forEach(function(group){
+  gsap.fromTo(group.children,{opacity:0,y:24},{opacity:1,y:0,duration:.65,stagger:.07,ease:'power2.out',
+    scrollTrigger:{trigger:group,start:'top 88%',toggleActions:'play none none none'}});
+});
+
+/* ── hero parallax ── */
+gsap.fromTo('[data-hero-img]',{yPercent:-6},{yPercent:6,ease:'none',
+  scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:.5}});
+
+/* ── signatures: three infinite drifting video columns (lerp engine) ── */
+(function sigGallery(){
+  var cols=Array.prototype.slice.call(sigSection.querySelectorAll('.sig-col'));
+  var state=cols.map(function(col,i){
+    return {track:col.querySelector('.sig-track'),pos:0,half:0,dir:(i%2===0?1:-1),base:(26+i*8)};
+  });
+  var speed={current:0,target:1},inView=false;
+  function measure(){
+    state.forEach(function(s){
+      s.half=s.track.scrollHeight/2;
+      if(s.dir===-1&&s.pos===0)s.pos=-s.half;
+    });
+  }
+  measure();
+  window.addEventListener('resize',measure);
+  window.addEventListener('load',measure);
+  ScrollTrigger.create({trigger:sigSection,start:'top bottom',end:'bottom top',
+    onToggle:function(st){inView=st.isActive;}});
+  sigSection.addEventListener('mouseenter',function(){speed.target=0;});
+  sigSection.addEventListener('mouseleave',function(){speed.target=1;});
+  sigSection.addEventListener('focusin',function(){speed.target=0;});
+  sigSection.addEventListener('focusout',function(){speed.target=1;});
+  var last=performance.now();
+  gsap.ticker.add(function(){
+    var now=performance.now(),dt=Math.min((now-last)/1000,.05);last=now;
+    if(!inView)return;
+    speed.current=lerp(speed.current,speed.target,.06);
+    state.forEach(function(s){
+      if(!s.half)return;
+      s.pos+=s.dir*s.base*speed.current*dt;
+      var y=s.pos%s.half;if(y>0)y-=s.half;
+      s.track.style.transform='translate3d(0,'+y+'px,0)';
+    });
+  });
+})();
+
+/* ── all products wheel: drag-to-spin arc ── */
+(function wheel(){
+  var stage=wheelStage,section=document.querySelector('.wheel-section');
+  var cards=Array.prototype.slice.call(stage.children);
+  var n=cards.length;
+  var rot={ease:.05,current:0,target:0,last:0};
+  var AUTO=4.2,autoOn=true,inView=false,down=false,startX=0,startRot=0;
+  var W=0,H=0,R=0,cx=0,cy=0,step=360/n,frontIdx=-1;
+  var nameEl=document.getElementById('wheel-name'),
+      brandEl=document.getElementById('wheel-brand'),
+      priceEl=document.getElementById('wheel-price');
+  function resize(){
+    W=stage.clientWidth;H=stage.clientHeight;
+    R=Math.max(W*1.15,900);cx=W/2;cy=H+R-H*.42;
+  }
+  resize();window.addEventListener('resize',resize);
+  ScrollTrigger.create({trigger:section,start:'top bottom',end:'bottom top',
+    onToggle:function(st){inView=st.isActive;}});
+  function px2deg(px){return px*(120/W);}
+  stage.addEventListener('pointerdown',function(e){
+    down=true;startX=e.clientX;startRot=rot.target;autoOn=false;
+    stage.classList.add('dragging');stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener('pointermove',function(e){
+    if(!down)return;rot.target=startRot+px2deg(e.clientX-startX);
+  });
+  function release(){down=false;stage.classList.remove('dragging');
+    gsap.delayedCall(2.2,function(){autoOn=true;});}
+  stage.addEventListener('pointerup',release);
+  stage.addEventListener('pointercancel',release);
+  stage.addEventListener('mouseleave',function(){if(down)release();});
+  stage.addEventListener('mouseover',function(e){if(e.target.closest('.wheel-card'))autoOn=false;});
+  stage.addEventListener('mouseout',function(e){if(e.target.closest('.wheel-card')&&!down)autoOn=true;});
+  stage.addEventListener('click',function(e){
+    if(Math.abs(rot.current-rot.last)>.08)e.preventDefault();
+  },true);
+  var lastT=performance.now(),placedOnce=false;
+  gsap.ticker.add(function(){
+    var now=performance.now(),dt=Math.min((now-lastT)/1000,.05);lastT=now;
+    if(!inView&&placedOnce)return;
+    placedOnce=true;
+    if(autoOn&&!down)rot.target+=AUTO*dt;
+    rot.current=lerp(rot.current,rot.target,rot.ease);
+    var vel=rot.current-rot.last;
+    var tilt=Math.max(-10,Math.min(10,vel*26));
+    var best=1e9,bestI=-1;
+    cards.forEach(function(card,i){
+      var a=(i*step+rot.current)%360;if(a<0)a+=360;
+      var rad=(a-180)*Math.PI/180;
+      var x=cx+Math.sin(rad)*R;
+      var y=cy-Math.cos(rad)*R;
+      var deg=Math.sin(rad)*26;
+      card.style.transform='translate3d('+x+'px,'+y+'px,0) translate(-50%,-50%) rotate('+(deg+tilt*Math.cos(rad)*.3)+'deg)';
+      var d=Math.min(Math.abs(a-180),360-Math.abs(a-180));
+      if(d<best){best=d;bestI=i;}
+    });
+    if(bestI!==frontIdx&&best<step*.55){
+      frontIdx=bestI;
+      cards.forEach(function(c,i){c.classList.toggle('is-front',i===bestI);});
+      var p=PRODUCTS[bestI%PRODUCTS.length];
+      wheelBuyNow.href='/products/'+p.handle;
+      wheelAddCart.setAttribute('data-handle',p.handle);
+      gsap.timeline()
+        .to([brandEl,nameEl,priceEl],{opacity:0,y:-8,duration:.16,ease:'power1.in',stagger:.02})
+        .add(function(){brandEl.textContent=p.brand;nameEl.textContent=p.name;priceEl.textContent=p.price;})
+        .to([brandEl,nameEl,priceEl],{opacity:1,y:0,duration:.28,ease:'power2.out',stagger:.03});
+    }
+    rot.last=rot.current;
+  });
+})();
+
+/* ── rail highlight follows scroll ── */
+chapters.forEach(function(sec,idx){
+  ScrollTrigger.create({trigger:sec,start:'top center',end:'bottom center',
+    onToggle:function(st){if(st.isActive)setActiveChapter(idx);}});
+});
+
+/* refresh trigger positions once media settles */
+window.addEventListener('load',function(){ScrollTrigger.refresh();});
+})();
+</script>
+</body>
+</html>
